@@ -1,5 +1,5 @@
 {
-  description = "Example nix-darwin system flake";
+  description = "nix-darwin system flake (macOS)";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -13,11 +13,22 @@
       # List packages installed in system profile. To search by name, run:
       # $ nix-env -qaP | grep wget
       environment.systemPackages =
-        [ pkgs.vim
+        with pkgs; [
+          git
+          vim
         ];
 
       # Necessary for using flakes on this system.
-      nix.settings.experimental-features = "nix-command flakes";
+      nix.settings.experimental-features = [ "nix-command" "flakes" ];
+
+      # Enable Nix daemon (recommended on macOS).
+      services.nix-daemon.enable = true;
+
+      # If you use unfree packages, keep this on (e.g. 1Password, some fonts).
+      nixpkgs.config.allowUnfree = true;
+
+      # Hostname should match the flake output name (darwinConfigurations.<name>).
+      networking.hostName = "hammerhead";
 
       # Enable alternative shell support in nix-darwin.
       # programs.fish.enable = true;
