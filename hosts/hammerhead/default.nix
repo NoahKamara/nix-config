@@ -7,6 +7,11 @@
     inputs.home-manager.darwinModules.home-manager
   ];
 
+  users.users.noahkamara = {
+    name = "noahkamara";
+    home = "/Users/noahkamara";
+  };
+
   home-manager = {
     useGlobalPkgs = true;
     useUserPackages = true;
