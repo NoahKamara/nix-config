@@ -72,7 +72,7 @@
       # Browsers
       "arc"
       "tor-browser"
-      
+
       # AI Tools
       "antigravity"
       "codex"
@@ -85,6 +85,7 @@
       "nordvpn"
       "keka"
       "shottr"
+      "KeePassXC"
 
       # Dev
       "xcodes-app"
