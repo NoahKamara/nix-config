@@ -45,20 +45,20 @@ This flake defines `darwinConfigurations.hammerhead`.
 ```bash
 nix --extra-experimental-features "nix-command flakes" \
   run github:nix-darwin/nix-darwin/master#darwin-rebuild -- \
-  switch --flake "/Users/noahkamara/Tools/nix-config#hammerhead"
+  switch --flake .#hammerhead"
 ```
 
 **Subsequent switches:**
 
 ```bash
-darwin-rebuild switch --flake "/Users/noahkamara/Tools/nix-config#hammerhead"
+darwin-rebuild switch --flake ".#hammerhead"
 ```
 
 ### Update inputs
 
 ```bash
 nix flake update
-darwin-rebuild switch --flake "/Users/noahkamara/Tools/nix-config#hammerhead"
+darwin-rebuild switch --flake ".#hammerhead"
 ```
 
 ### Customize
@@ -106,9 +106,41 @@ Windows remains native for gaming; development happens inside WSL.
 
 ## Development Shells
 
+You can manually enter the default development shell (with `jq`, `just`, etc.) by running:
+
 ```bash
 nix develop
 ```
+
+Or you can enter a specific shell (like the Swift environment) by running:
+
+```bash
+nix develop .#swift
+```
+
+### Automatic Environment Activation (direnv + Cursor)
+
+This repository includes `direnv` and `nix-direnv` setup via Home Manager to automatically load these shells when you `cd` into a project directory. 
+
+**1. Configure the Project Folder**
+In your specific project folder, create a `.envrc` file to point to the desired shell in this flake:
+
+* For the **Swift** shell: `echo "use flake ~/Tools/nix-config#swift" > .envrc`
+* For the **Default** shell: `echo "use flake ~/Tools/nix-config" > .envrc`
+
+**2. Allow the Environment**
+Navigate to the folder in your terminal and allow the environment:
+
+```bash
+direnv allow
+```
+
+**3. Use in Cursor IDE**
+To make Cursor recognize these tools (for language servers, formatters like `swiftformat`, etc.), you have two options:
+* **Option A (Recommended)**: Install the **`direnv`** extension (`mkhl.direnv`) in Cursor. It will automatically load the Nix environment when you open the folder.
+* **Option B**: Launch Cursor directly from the activated terminal (`cursor .`), which passes the Nix environment variables to the editor.
+
+---
 
 Optional per-project shells can be added under `devShells` in `flake.nix`.
 

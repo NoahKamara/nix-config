@@ -30,10 +30,11 @@
           ];
         };
 
-      } // nixpkgs.lib.optionalAttrs (system == "x86_64-linux") {
+      } // {
         swift = pkgs.mkShell {
           buildInputs = with pkgs; [
             swift
+            swiftformat
             clang
             pkg-config
             openssl

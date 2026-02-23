@@ -65,6 +65,9 @@
       autoUpdate = false;
       cleanup = "uninstall";
     };
+    taps = [
+      "nikitabobko/tap"
+    ];
     casks = [
       # AI Tools
       "antigravity"

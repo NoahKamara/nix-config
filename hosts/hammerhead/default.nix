@@ -1,4 +1,4 @@
-{ self, inputs, ... }:
+{ self, inputs, pkgs, ... }:
 
 {
   imports = [
@@ -7,9 +7,12 @@
     inputs.home-manager.darwinModules.home-manager
   ];
 
+  programs.fish.enable = true;
+
   users.users.noahkamara = {
     name = "noahkamara";
     home = "/Users/noahkamara";
+    shell = pkgs.fish;
   };
 
   home-manager = {
