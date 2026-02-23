@@ -69,11 +69,14 @@
       "nikitabobko/tap"
     ];
     casks = [
+      # Browsers
+      "arc"
+      "tor-browser"
+      
       # AI Tools
       "antigravity"
       "codex"
       "cursor"
-      "arc"
 
       # System Tools
       "betterdisplay"
