@@ -86,6 +86,7 @@
       "keka"
       "shottr"
       "KeePassXC"
+      "vlc"
 
       # Dev
       "xcodes-app"
