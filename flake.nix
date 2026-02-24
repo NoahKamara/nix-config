@@ -40,10 +40,6 @@
             openssl
             zlib
           ];
-
-          shellHook = ''
-            export SWIFT_BACKTRACE=enable=yes
-          '';
         };
       });
   };
