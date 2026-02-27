@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, userProfile, ... }:
 
 {
   imports = [
@@ -53,18 +53,31 @@
   programs.git = {
     enable = true;
     settings = {
-      user.name = "Noah Kamara";
-      user.email = "mail@noahkamara.com";
+      user.name = userProfile.fullName;
+      user.email = userProfile.email;
+    };
+  };
+
+  programs.ssh = {
+    enable = true;
+    enableDefaultConfig = false;
+    matchBlocks = {
+      "*" = {
+        addKeysToAgent = "yes";
+        identityFile = [
+          "~/.ssh/id_ed25519"
+          "~/.ssh/id_rsa"
+        ];
+      };
     };
   };
 
   programs.zoxide.enable = true;
 
   programs.zsh.enable = true;
-  programs.fish = {
-    enable = true;
-  };
+  programs.fish.enable = true
 
+  # macOS Window Management
   home.file.".aerospace.toml" = pkgs.lib.mkIf pkgs.stdenv.isDarwin {
     source = ./aerospace.toml;
   };

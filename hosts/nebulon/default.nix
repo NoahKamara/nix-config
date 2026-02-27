@@ -1,10 +1,9 @@
-{ self, inputs, lib, pkgs, ... }:
-let 
-  username = "noah";
-in {
+{ self, inputs, lib, ... }:
+{
   imports = [
     ../../modules/shared
     ../../modules/nixos
+    ../../modules/user
     inputs.home-manager.nixosModules.home-manager
   ] ++ lib.optional (builtins.pathExists ./hardware-configuration.nix) ./hardware-configuration.nix;
 
@@ -19,19 +18,6 @@ in {
   services.desktopManager.gnome.enable = true;
 
   programs.fish.enable = true;
-
-  users.users.${username} = {
-    isNormalUser = true;
-    extraGroups = [ "wheel" "networkmanager" ];
-    shell = pkgs.fish;
-  };
-
-  home-manager = {
-    useGlobalPkgs = true;
-    useUserPackages = true;
-    backupFileExtension = "backup";
-    users.${username}= import ../../modules/home;
-  };
 
   system.configurationRevision = self.rev or self.dirtyRev or null;
   system.stateVersion = "24.11";
@@ -49,4 +35,3 @@ in {
   };
 
 }
-

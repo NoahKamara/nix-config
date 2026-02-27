@@ -1,30 +1,21 @@
-{ self, inputs, pkgs, ... }:
-let 
-  username = "noah";
+{ self, inputs, pkgs, userProfile, ... }:
+let
+  localUserProfile = userProfile // {
+    username = "noahkamara";
+  };
+  username = localUserProfile.username;
 in {
   imports = [
     ../../modules/shared
     ../../modules/darwin
+    ../../modules/user
     inputs.home-manager.darwinModules.home-manager
   ];
 
   programs.fish.enable = true;
   environment.shells = [ pkgs.fish ];
-
-  users.users.${username} = {
-    name = username;
-    home = "/Users/${username}";
-    shell = pkgs.fish;
-  };
-
-  home-manager = {
-    useGlobalPkgs = true;
-    useUserPackages = true;
-    backupFileExtension = "backup";
-    users.${username} = import ../../modules/home;
-  };
-
   system.primaryUser = username;
+  _module.args.userProfile = localUserProfile;
 
   # nix-darwin does not change the shell for existing users by default
   # so we use an activation script to enforce it declaratively.

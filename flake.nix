@@ -13,15 +13,20 @@
   let
     systems = [ "x86_64-linux" "aarch64-darwin" ];
     forAllSystems = nixpkgs.lib.genAttrs systems;
+    userProfile = {
+      username = "noah";
+      fullName = "Noah Kamara";
+      email = "mail@noahkamara.com";
+    };
   in
   {
     darwinConfigurations."hammerhead" = nix-darwin.lib.darwinSystem {
-      specialArgs = { inherit self inputs; };
+      specialArgs = { inherit self inputs userProfile; };
       modules = [ ./hosts/hammerhead ];
     };
 
     nixosConfigurations."nebulon" = nixpkgs.lib.nixosSystem {
-      specialArgs = { inherit self inputs; };
+      specialArgs = { inherit self inputs userProfile; };
       modules = [ ./hosts/nebulon ];
     };
 
