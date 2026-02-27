@@ -98,6 +98,11 @@
   wayland.windowManager.hyprland = lib.mkIf pkgs.stdenv.isLinux {
     enable = true;
     systemd.enable = true;
+    settings = {
+      bind = [
+        "ALT, SPACE, exec, wofi --show drun"
+      ];
+    };
   };
 
   home.sessionVariables = lib.mkIf pkgs.stdenv.isLinux {
