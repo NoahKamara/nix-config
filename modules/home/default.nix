@@ -1,4 +1,4 @@
-{ pkgs, userProfile, ... }:
+{ pkgs, lib, userProfile, ... }:
 
 {
   imports = [
@@ -41,7 +41,19 @@
 
       direnv allow
     '')
-  ];
+  ] ++ lib.optionals pkgs.stdenv.isLinux (with pkgs; [
+    wofi
+    waybar
+    mako
+    swaylock
+    swayidle
+    wl-clipboard
+    grim
+    slurp
+    brightnessctl
+    playerctl
+    pavucontrol
+  ]);
 
   programs.home-manager.enable = true;
 
@@ -76,6 +88,50 @@
 
   programs.zsh.enable = true;
   programs.fish.enable = true;
+
+  programs.fish.loginShellInit = lib.mkIf pkgs.stdenv.isLinux ''
+    if test (tty) = "/dev/tty1"; and test -z "$WAYLAND_DISPLAY"; and test -z "$DISPLAY"
+      exec dbus-run-session sway
+    end
+  '';
+
+  programs.zsh.loginExtra = lib.mkIf pkgs.stdenv.isLinux ''
+    if [[ "$(tty)" == "/dev/tty1" ]] && [[ -z "$WAYLAND_DISPLAY" ]] && [[ -z "$DISPLAY" ]]; then
+      exec dbus-run-session sway
+    fi
+  '';
+
+  wayland.windowManager.sway = lib.mkIf pkgs.stdenv.isLinux {
+    enable = true;
+    systemd.enable = true;
+    checkConfig = false;
+    config = {
+      modifier = "Mod4";
+      terminal = "ghostty";
+      menu = "wofi --show drun";
+      startup = [
+        { command = "waybar"; }
+        { command = "mako"; }
+      ];
+      bars = [ ];
+      keybindings = lib.mkOptionDefault {
+        "Mod4+Shift+e" = "exec swaynag -t warning -m 'Exit Sway?' -B 'Yes' 'swaymsg exit'";
+        "Mod4+l" = "exec swaylock -f";
+      };
+    };
+    extraConfig = ''
+      exec swayidle -w \
+        timeout 300 'swaylock -f' \
+        timeout 600 'swaymsg "output * power off"' \
+        resume 'swaymsg "output * power on"' \
+        before-sleep 'swaylock -f'
+    '';
+  };
+
+  home.sessionVariables = lib.mkIf pkgs.stdenv.isLinux {
+    NIXOS_OZONE_WL = "1";
+    MOZ_ENABLE_WAYLAND = "1";
+  };
 
   # macOS Window Management
   home.file.".aerospace.toml" = pkgs.lib.mkIf pkgs.stdenv.isDarwin {
