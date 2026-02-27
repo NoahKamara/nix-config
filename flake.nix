@@ -20,6 +20,11 @@
       modules = [ ./hosts/hammerhead ];
     };
 
+    nixosConfigurations."nixos-desktop" = nixpkgs.lib.nixosSystem {
+      specialArgs = { inherit self inputs; };
+      modules = [ ./hosts/nixos-desktop ];
+    };
+
     devShells = forAllSystems (system:
       let pkgs = nixpkgs.legacyPackages.${system};
       in {
