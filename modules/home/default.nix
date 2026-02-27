@@ -50,7 +50,13 @@
     nix-direnv.enable = true;
   };
 
-  programs.git.enable = true;
+  programs.git = {
+    enable = true;
+    settings = {
+      user.name = "Noah Kamara";
+      user.email = "mail@noahkamara.com";
+    };
+  };
 
   programs.zoxide.enable = true;
 

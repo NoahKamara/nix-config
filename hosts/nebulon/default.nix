@@ -1,6 +1,7 @@
 { self, inputs, lib, pkgs, ... }:
-
-{
+let 
+  username = "noah";
+in {
   imports = [
     ../../modules/shared
     ../../modules/nixos
@@ -12,10 +13,14 @@
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
+	
+  services.xserver.enable = true;
+  services.displayManager.gdm.enable = true;
+  services.desktopManager.gnome.enable = true;
 
   programs.fish.enable = true;
 
-  users.users.noahkamara = {
+  users.users.${username} = {
     isNormalUser = true;
     extraGroups = [ "wheel" "networkmanager" ];
     shell = pkgs.fish;
@@ -25,11 +30,23 @@
     useGlobalPkgs = true;
     useUserPackages = true;
     backupFileExtension = "backup";
-    users.noahkamara = import ../../modules/home;
+    users.${username}= import ../../modules/home;
   };
 
   system.configurationRevision = self.rev or self.dirtyRev or null;
   system.stateVersion = "24.11";
 
   nixpkgs.hostPlatform = "x86_64-linux";
+
+  services.openssh = {
+    enable = true;
+    settings = {
+      PasswordAuthentication = true;
+      KbdInteractiveAuthentication = false;
+      PermitRootLogin = "no";
+    };
+    openFirewall = true;
+  };
+
 }
+
