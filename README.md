@@ -87,7 +87,7 @@ Full declarative system.
 Build:
 
 ```bash
-sudo nixos-rebuild switch --flake .#nixos-desktop
+sudo nixos-rebuild switch --flake .#nebulon
 ```
 
 ### Windows (WSL)

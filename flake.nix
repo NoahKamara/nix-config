@@ -20,9 +20,9 @@
       modules = [ ./hosts/hammerhead ];
     };
 
-    nixosConfigurations."nixos-desktop" = nixpkgs.lib.nixosSystem {
+    nixosConfigurations."nebulon" = nixpkgs.lib.nixosSystem {
       specialArgs = { inherit self inputs; };
-      modules = [ ./hosts/nixos-desktop ];
+      modules = [ ./hosts/nebulon ];
     };
 
     devShells = forAllSystems (system:

@@ -7,7 +7,7 @@
     inputs.home-manager.nixosModules.home-manager
   ] ++ lib.optional (builtins.pathExists ./hardware-configuration.nix) ./hardware-configuration.nix;
 
-  networking.hostName = "nixos-desktop";
+  networking.hostName = "nebulon";
   networking.networkmanager.enable = true;
 
   boot.loader.systemd-boot.enable = true;
