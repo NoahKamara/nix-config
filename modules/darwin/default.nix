@@ -6,6 +6,12 @@
     touchIdAuth = true;
   };
 
+  nix.gc.interval = {
+    Weekday = 0;
+    Hour = 2;
+    Minute = 0;
+  };
+
   system.defaults = {
     # Minimal dock — AeroSpace manages windows, not the dock
     dock = {

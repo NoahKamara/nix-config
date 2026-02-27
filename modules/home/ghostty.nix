@@ -5,7 +5,7 @@
     enableZshIntegration = true;
     enableFishIntegration = true;
     installBatSyntax = false;
-    package = null; # Don't try to install via Nix, since we use the Homebrew Cask
+    package = if pkgs.stdenv.isDarwin then null else pkgs.ghostty;
     settings = {
       theme = "light:Adwaita,dark:Adwaita Dark";
       macos-option-as-alt = true;

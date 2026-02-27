@@ -6,8 +6,6 @@
   ];
 
   home.stateVersion = "24.11";
-  home.username = "noahkamara";
-  home.homeDirectory = "/Users/noahkamara";
 
   home.packages = with pkgs; [
     ripgrep
@@ -61,5 +59,7 @@
     enable = true;
   };
 
-  home.file.".aerospace.toml".source = ./aerospace.toml;
+  home.file.".aerospace.toml" = pkgs.lib.mkIf pkgs.stdenv.isDarwin {
+    source = ./aerospace.toml;
+  };
 }
