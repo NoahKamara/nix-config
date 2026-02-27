@@ -1,6 +1,15 @@
-{ ... }:
+{ config, pkgs, ... }:
 
 {
+  # nix-darwin does not change the shell for existing users by default,
+  # so enforce fish for the configured primary user during activation.
+  system.activationScripts.postActivation.text = ''
+    if [ "$(/usr/bin/dscl . -read /Users/${config.system.primaryUser} UserShell | awk '{print $2}')" != "${pkgs.fish}/bin/fish" ]; then
+      echo "Changing user shell to fish..."
+      chsh -s ${pkgs.fish}/bin/fish ${config.system.primaryUser}
+    fi
+  '';
+
   security.pam.services.sudo_local = {
     enable = true;
     touchIdAuth = true;
