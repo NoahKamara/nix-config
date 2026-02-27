@@ -64,12 +64,46 @@
 
     apps = forAllSystems (system:
       let
-        comfyPackages = inputs.comfyui-nix.packages.${system};
+        comfyPkgs = import nixpkgs {
+          inherit system;
+          config = {
+            allowUnfree = true;
+            allowBrokenPredicate = pkg: (pkg.pname or "") == "open-clip-torch";
+            allowUnsupportedSystem = system == "aarch64-linux";
+          };
+        };
+        comfyVersions = import "${comfyui-nix}/nix/versions.nix";
+        mkComfyPackages =
+          gpuSupport:
+          let
+            basePythonOverrides = import "${comfyui-nix}/nix/python-overrides.nix" {
+              pkgs = comfyPkgs;
+              versions = comfyVersions;
+              inherit gpuSupport;
+            };
+            pythonOverrides = final: prev:
+              (basePythonOverrides final prev)
+              // {
+                mss = prev.mss.overridePythonAttrs (_: {
+                  doCheck = false;
+                });
+              };
+          in
+          import "${comfyui-nix}/nix/packages.nix" {
+            pkgs = comfyPkgs;
+            lib = comfyPkgs.lib;
+            versions = comfyVersions;
+            inherit pythonOverrides gpuSupport;
+          };
+
+        comfyPackages = mkComfyPackages "none";
+        comfyPackagesRocm = mkComfyPackages "rocm";
+        comfyPackagesCuda = mkComfyPackages "cuda";
         comfyCpu = "${comfyPackages.default}/bin/comfy-ui";
         comfyRocm =
-          if system == "x86_64-linux" then "${comfyPackages.rocm}/bin/comfy-ui" else comfyCpu;
+          if system == "x86_64-linux" then "${comfyPackagesRocm.default}/bin/comfy-ui" else comfyCpu;
         comfyCuda =
-          if system == "x86_64-linux" then "${comfyPackages.cuda}/bin/comfy-ui" else comfyCpu;
+          if system == "x86_64-linux" then "${comfyPackagesCuda.default}/bin/comfy-ui" else comfyCpu;
         comfyDefault = if system == "x86_64-linux" then comfyCuda else comfyCpu;
       in
       {
