@@ -14,7 +14,7 @@
     systems = [ "x86_64-linux" "aarch64-darwin" ];
     forAllSystems = nixpkgs.lib.genAttrs systems;
     userProfile = {
-      username = "noah";
+      username = "noahkamara";
       fullName = "Noah Kamara";
       email = "mail@noahkamara.com";
     };
