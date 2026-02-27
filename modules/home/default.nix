@@ -12,7 +12,6 @@
     fd
     tree
     lazygit
-    comfy-ui
     (writeShellScriptBin "use-nix" ''
       config_path=""
       
@@ -41,17 +40,6 @@
       fi
 
       direnv allow
-    '')
-    (writeShellScriptBin "comfyui-start" ''
-      set -euo pipefail
-
-      if [ "$(uname -s)" = "Darwin" ]; then
-        base_dir="''${COMFYUI_BASE_DIRECTORY:-$HOME/Library/Application Support/comfy-ui}"
-      else
-        base_dir="''${COMFYUI_BASE_DIRECTORY:-$HOME/.config/comfy-ui}"
-      fi
-
-      exec comfy-ui --base-directory "$base_dir" --enable-manager --open "$@"
     '')
   ] ++ lib.optionals pkgs.stdenv.isLinux (with pkgs; [
     wofi

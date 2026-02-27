@@ -61,5 +61,21 @@
           ];
         };
       });
+
+    apps = forAllSystems (system:
+      let
+        comfyUi = inputs.comfyui-nix.packages.${system}.default;
+      in
+      {
+        default = {
+          type = "app";
+          program = "${comfyUi}/bin/comfy-ui";
+        };
+
+        comfyui = {
+          type = "app";
+          program = "${comfyUi}/bin/comfy-ui";
+        };
+      });
   };
 }
