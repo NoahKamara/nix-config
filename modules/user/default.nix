@@ -14,6 +14,8 @@ in
     // lib.optionalAttrs pkgs.stdenv.isLinux {
       isNormalUser = true;
       extraGroups = [ "wheel" "networkmanager" ];
+      # Keep user systemd available across logouts so rebuild can reload user units.
+      linger = true;
     };
 
   home-manager = {
