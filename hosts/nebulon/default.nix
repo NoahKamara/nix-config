@@ -74,4 +74,22 @@
     openFirewall = true;
   };
 
+  environment.systemPackages = with pkgs; [
+    wayvnc
+  ];
+
+  networking.firewall.allowedTCPPorts = [ 5900 ];
+
+  systemd.user.services.wayvnc = {
+    description = "WayVNC server";
+    after = [ "graphical-session.target" ];
+    partOf = [ "graphical-session.target" ];
+    wantedBy = [ "graphical-session.target" ];
+    serviceConfig = {
+      ExecStart = "${pkgs.wayvnc}/bin/wayvnc 0.0.0.0 5900";
+      Restart = "on-failure";
+      RestartSec = 2;
+    };
+  };
+
 }
