@@ -16,7 +16,7 @@
     editor = false;
     memtest86.enable = false;
     extraEntries = {
-      windows = ''
+      "windows.conf" = ''
         title Windows
         efi /EFI/Microsoft/Boot/bootmgfw.efi
       '';
