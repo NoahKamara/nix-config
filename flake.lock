@@ -8,16 +8,17 @@
         ]
       },
       "locked": {
-        "lastModified": 1771563628,
-        "narHash": "sha256-zfSyNmV4bB7lbKbOmrBy5+239DnE6rp8xr1tmIpmRbk=",
+        "lastModified": 1772228624,
+        "narHash": "sha256-QFnEa216O5mnUV5Fb3M8CYyq911dYvZNgE2/dd53KkY=",
         "owner": "utensils",
         "repo": "comfyui-nix",
-        "rev": "82914911ea9346cb64c132b1be73c77a74f570b0",
+        "rev": "8b2a35890823c8529a25a57c4d9fdbd712aa3b38",
         "type": "github"
       },
       "original": {
         "owner": "utensils",
         "repo": "comfyui-nix",
+        "rev": "8b2a35890823c8529a25a57c4d9fdbd712aa3b38",
         "type": "github"
       }
     },

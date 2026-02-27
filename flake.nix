@@ -7,7 +7,7 @@
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
-    comfyui-nix.url = "github:utensils/comfyui-nix";
+    comfyui-nix.url = "github:utensils/comfyui-nix/8b2a35890823c8529a25a57c4d9fdbd712aa3b38";
     comfyui-nix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
