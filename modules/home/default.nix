@@ -75,7 +75,7 @@
   programs.zoxide.enable = true;
 
   programs.zsh.enable = true;
-  programs.fish.enable = true
+  programs.fish.enable = true;
 
   # macOS Window Management
   home.file.".aerospace.toml" = pkgs.lib.mkIf pkgs.stdenv.isDarwin {
