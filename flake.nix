@@ -7,9 +7,11 @@
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
+    comfyui-nix.url = "github:utensils/comfyui-nix";
+    comfyui-nix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nix-darwin, nixpkgs, home-manager, ... } @ inputs:
+  outputs = { self, nix-darwin, nixpkgs, home-manager, comfyui-nix, ... } @ inputs:
   let
     systems = [ "x86_64-linux" "aarch64-darwin" ];
     forAllSystems = nixpkgs.lib.genAttrs systems;
