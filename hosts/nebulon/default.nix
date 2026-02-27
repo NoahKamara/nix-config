@@ -14,7 +14,6 @@
     enable = true;
     configurationLimit = 10;
     editor = false;
-    memtest86.enable = false;
     extraEntries = {
       "windows.conf" = ''
         title Windows
@@ -54,8 +53,6 @@
     enable = true;
     extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
   };
-
-  environment.sessionVariables.NIXOS_OZONE_WL = "1";
 
   programs.fish.enable = true;
 

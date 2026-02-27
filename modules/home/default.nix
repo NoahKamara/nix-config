@@ -13,25 +13,8 @@
     tree
     lazygit
     (writeShellScriptBin "use-nix" ''
-      config_path=""
-      
-      if [ -n "$NIX_CONFIG_DIR" ]; then
-        config_path="$NIX_CONFIG_DIR"
-      else
-        # fallback to ~/.nix-config
-        config_path="$HOME/.nix-config"
-      fi
-
-      if [ -z "$config_path" ]; then
-        echo "Error: Could not find nix-config directory."
-        echo "Please set \$NIX_CONFIG_DIR to its location."
-        exit 1
-      fi
-
-      shell_name="default"
-      if [ $# -gt 0 ]; then
-        shell_name="$1"
-      fi
+      config_path="''${NIX_CONFIG_DIR:-$HOME/.nix-config}"
+      shell_name="''${1:-default}"
 
       if [ "$shell_name" = "default" ]; then
         echo "use flake \"$config_path\"" > .envrc
