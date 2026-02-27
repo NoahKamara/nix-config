@@ -24,32 +24,15 @@
   };
   boot.loader.efi.canTouchEfiVariables = true;
 	
-  programs.sway = {
-    enable = true;
-    wrapperFeatures.gtk = true;
-    extraPackages = with pkgs; [
-      swaylock
-      swayidle
-      wl-clipboard
-      grim
-      slurp
-      wofi
-      waybar
-      mako
-      brightnessctl
-      playerctl
-      pavucontrol
-    ];
-  };
+  programs.hyprland.enable = true;
 
-  # No display manager: login via TTY and start Sway from shell init.
   services.xserver.enable = false;
   services.greetd = {
     enable = true;
     settings = {
       default_session = {
         user = "greeter";
-        command = "${pkgs.tuigreet}/bin/tuigreet --time --remember --remember-session --cmd sway";
+        command = "${pkgs.tuigreet}/bin/tuigreet --time --remember --remember-session --cmd Hyprland";
       };
     };
   };
@@ -69,7 +52,6 @@
 
   xdg.portal = {
     enable = true;
-    wlr.enable = true;
     extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
   };
 
