@@ -1,6 +1,10 @@
 { config, pkgs, ... }:
 
 {
+  imports = [
+    ./gaming.nix
+  ];
+
   # nix-darwin does not change the shell for existing users by default,
   # so enforce fish for the configured primary user during activation.
   system.activationScripts.postActivation.text = ''
@@ -111,7 +115,6 @@
       "ghostty"
 
       # Communication
-      "discord"
       "signal"
 
       # Productivity
