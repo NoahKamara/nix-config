@@ -1,10 +1,5 @@
 { self, inputs, pkgs, userProfile, ... }:
-let
-  localUserProfile = userProfile // {
-    username = "noahkamara";
-  };
-  username = localUserProfile.username;
-in {
+{
   imports = [
     ../../modules/shared
     ../../modules/darwin
@@ -14,8 +9,7 @@ in {
 
   programs.fish.enable = true;
   environment.shells = [ pkgs.fish ];
-  system.primaryUser = username;
-  _module.args.userProfile = localUserProfile;
+  system.primaryUser = userProfile.username;
 
   networking.hostName = "hammerhead";
 

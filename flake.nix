@@ -21,7 +21,10 @@
   in
   {
     darwinConfigurations."hammerhead" = nix-darwin.lib.darwinSystem {
-      specialArgs = { inherit self inputs userProfile; };
+      specialArgs = { 
+        inherit self inputs;
+        userProfile = userProfile // { username = "noahkamara"; };
+      };
       modules = [ ./hosts/hammerhead ];
     };
 
