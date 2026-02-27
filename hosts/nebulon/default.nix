@@ -44,6 +44,16 @@
 
   # No display manager: login via TTY and start Sway from shell init.
   services.xserver.enable = false;
+  services.greetd = {
+    enable = true;
+    settings = {
+      default_session = {
+        user = "greeter";
+        command = "${pkgs.tuigreet}/bin/tuigreet --time --remember --remember-session --cmd sway";
+      };
+    };
+  };
+
   security.polkit.enable = true;
   security.rtkit.enable = true;
   services.dbus.enable = true;

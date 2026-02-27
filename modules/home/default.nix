@@ -89,18 +89,6 @@
   programs.zsh.enable = true;
   programs.fish.enable = true;
 
-  programs.fish.loginShellInit = lib.mkIf pkgs.stdenv.isLinux ''
-    if test (tty) = "/dev/tty1"; and test -z "$WAYLAND_DISPLAY"; and test -z "$DISPLAY"
-      exec dbus-run-session sway
-    end
-  '';
-
-  programs.zsh.loginExtra = lib.mkIf pkgs.stdenv.isLinux ''
-    if [[ "$(tty)" == "/dev/tty1" ]] && [[ -z "$WAYLAND_DISPLAY" ]] && [[ -z "$DISPLAY" ]]; then
-      exec dbus-run-session sway
-    fi
-  '';
-
   wayland.windowManager.sway = lib.mkIf pkgs.stdenv.isLinux {
     enable = true;
     systemd.enable = true;
