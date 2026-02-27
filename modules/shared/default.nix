@@ -28,7 +28,6 @@
 
   nixpkgs = {
     config.allowUnfree = true;
-    overlays = [ inputs.comfyui-nix.overlays.default ];
   };
 
   fonts.packages = with pkgs; [
