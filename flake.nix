@@ -64,17 +64,38 @@
 
     apps = forAllSystems (system:
       let
-        comfyUi = inputs.comfyui-nix.packages.${system}.default;
+        comfyPackages = inputs.comfyui-nix.packages.${system};
+        comfyCpu = "${comfyPackages.default}/bin/comfy-ui";
+        comfyRocm =
+          if system == "x86_64-linux" then "${comfyPackages.rocm}/bin/comfy-ui" else comfyCpu;
+        comfyCuda =
+          if system == "x86_64-linux" then "${comfyPackages.cuda}/bin/comfy-ui" else comfyCpu;
+        comfyDefault = if system == "x86_64-linux" then comfyCuda else comfyCpu;
       in
       {
         default = {
           type = "app";
-          program = "${comfyUi}/bin/comfy-ui";
+          program = comfyDefault;
         };
 
         comfyui = {
           type = "app";
-          program = "${comfyUi}/bin/comfy-ui";
+          program = comfyDefault;
+        };
+
+        comfyui-cpu = {
+          type = "app";
+          program = comfyCpu;
+        };
+      } // nixpkgs.lib.optionalAttrs (system == "x86_64-linux") {
+        comfyui-rocm = {
+          type = "app";
+          program = comfyRocm;
+        };
+
+        comfyui-cuda = {
+          type = "app";
+          program = comfyCuda;
         };
       });
   };
