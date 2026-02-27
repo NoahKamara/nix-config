@@ -10,12 +10,29 @@
   networking.hostName = "nebulon";
   networking.networkmanager.enable = true;
 
-  boot.loader.systemd-boot.enable = true;
+  boot.loader.systemd-boot = {
+    enable = true;
+    configurationLimit = 10;
+    editor = false;
+    memtest86.enable = false;
+    extraEntries = {
+      windows = ''
+        title Windows
+        efi /EFI/Microsoft/Boot/bootmgfw.efi
+      '';
+    };
+  };
   boot.loader.efi.canTouchEfiVariables = true;
 	
-  services.xserver.enable = true;
-  services.displayManager.gdm.enable = true;
-  services.desktopManager.gnome.enable = true;
+  programs.sway = {
+    enable = true;
+    wrapperFeatures.gtk = true;
+  };
+
+  xdg.portal = {
+    enable = true;
+    wlr.enable = true;
+  };
 
   programs.fish.enable = true;
 
