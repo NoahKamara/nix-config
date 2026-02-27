@@ -1,87 +1,43 @@
 # Agent Instructions
 
-Instructions for AI coding agents working on this nix-config repository.
+This file is intentionally short and only covers non-obvious, repo-specific pitfalls.
 
-## Dev Environment
+## Scope And Priority
 
-- This is a Nix flake with a layered architecture. Use `nix develop` to enter the shared dev shell.
-- The project uses `.cursor/skills/nix-best-practices` — follow those patterns for flakes, overlays, unfree handling, and binary overlays.
+- If this file conflicts with explicit user instructions, follow the user.
+- Keep hosts thin. Put reusable logic in modules.
+- Prefer small edits in existing modules over creating new abstractions.
 
-## Architecture (Layered)
+## Hard Invariants
 
-| Layer | Purpose | Where to edit |
-|-------|---------|---------------|
-| System config | Minimal base OS (git, vim, curl, nix) | `modules/shared`, `modules/darwin`, `modules/nixos` |
-| Home Manager | Shell/editor config, tools needed in every shell | `modules/home` |
-| devShells | Language toolchains, build tools, dev-scoped packages | `devShells` in `flake.nix` |
+- System packages in `modules/shared` stay minimal.
+- Tools needed in every shell go in `modules/home/default.nix`.
+- General dev tools go in `devShells.default` in `flake.nix`.
+- macOS GUI apps go in `modules/darwin/default.nix` under Homebrew casks.
+- Host files in `hosts/*` should mostly wire imports and user/home-manager linkage.
 
-### Rule of Thumb
+## Repeated Failure Patterns
 
-- Needed in every shell (ripgrep, fd, zoxide, direnv) → `modules/home` (Home Manager)
-- Needed for development generally (jq, just) → shared devShell in `flake.nix`
-- Project-specific tooling → project-level flake, not this repo
-- GUI apps on macOS → `modules/darwin` (Homebrew casks)
-- Base OS plumbing (git, nix, coreutils) → `modules/shared` (system packages)
+- Do not hardcode `home.username` or `home.homeDirectory` in `modules/home/default.nix`.
+- Do not put Darwin-only options in shared modules.
+- Keep `nix.gc.interval` in `modules/darwin/default.nix`, not `modules/shared/default.nix`.
+- Gate macOS-only Home Manager files with `pkgs.stdenv.isDarwin`.
+  Example: `.aerospace.toml` must be Darwin-only.
+- Keep Ghostty package selection platform-aware in Home Manager.
+  Use `null` on Darwin (Homebrew cask path) and `pkgs.ghostty` on non-Darwin.
 
-### Automatic Shell Activation
+## Validation Checklist
 
-direnv + nix-direnv are configured via Home Manager. Projects with a `.envrc` containing `use flake` will auto-load their devShell on `cd`.
+- After each numbered phase, run: `sudo darwin-rebuild switch --flake .#hammerhead`.
+- For Linux host work, run: `sudo nixos-rebuild switch --flake .#<host>` when applicable.
+- If touching flake wiring, run: `nix flake check`.
 
-## Build Commands
+## Out Of Scope Unless Requested
 
-| Target | Command |
-|--------|---------|
-| macOS (hammerhead) | `darwin-rebuild switch --flake .#hammerhead` |
-| NixOS | `sudo nixos-rebuild switch --flake .#nixos-desktop` |
-| Windows (WSL) | `home-manager switch --flake .#user@windows-wsl` |
+- Do not edit `flake.lock` unless the task explicitly requires input updates.
+- Do not move large config blocks across modules unless asked.
+- Do not add project-specific tooling to this repo-level flake.
 
-Update inputs before rebuild: `nix flake update`
+## Reference Skill
 
-## Coding Conventions
-
-- **Hosts are thin**: Host configs import modules and wire up home-manager; keep logic in modules.
-- **Modules are reusable**: Shared logic in `modules/shared`, platform-specific in `modules/nixos`, `modules/darwin`, user-level in `modules/home`.
-- **Avoid duplication**: Prefer shared modules over copy-paste.
-- **Declarative**: Keep configuration declarative; avoid imperative scripts in config.
-- **System packages stay minimal**: Only git, vim, curl, and nix belong in system packages. Everything else goes to Home Manager or devShells.
-
-## Repository Structure
-
-```
-nix-config/
-├─ flake.nix          # Inputs, darwinConfigurations, devShells
-├─ flake.lock
-├─ hosts/             # Host-specific entrypoints (thin: imports + wiring)
-├─ modules/
-│  ├─ shared/         # Cross-platform system base: nix settings, git, vim
-│  ├─ nixos/          # Linux: bootloader, drivers, services, networking
-│  ├─ darwin/         # macOS: system defaults, Homebrew casks, Touch ID
-│  └─ home/           # Home Manager: shell, direnv, CLI tools, editor
-├─ home/
-└─ overlays/          # Custom package overrides or local derivations
-```
-
-## Adding a New Machine
-
-1. Create `hosts/<new-host>/default.nix`
-2. Import `modules/shared`, platform module, and `home-manager.<platform>Modules.home-manager`
-3. Configure `home-manager.users.<username> = import ../../modules/home`
-4. Add configuration entry in `flake.nix` (e.g. `darwinConfigurations."<name>"` or `nixosConfigurations."<name>"`)
-5. Rebuild using the corresponding target command
-
-## Adding Tools
-
-- **CLI tool for every shell**: Add to `home.packages` in `modules/home/default.nix`
-- **Dev tool**: Add to `devShells.default.buildInputs` in `flake.nix`
-- **macOS GUI app**: Add to `homebrew.casks` in `modules/darwin/default.nix`
-- **System-level package**: Only if truly needed globally — add to `modules/shared/default.nix`
-- Use `follows` for overlay inputs to avoid duplicate nixpkgs (see nix-best-practices skill).
-
-## Future Extensions (Context)
-
-Planned but not yet implemented:
-
-- Secrets management (agenix/sops)
-- CI build validation
-- Multi-user support
-- Remote deployment targets
+- Follow `.agents/skills/nix-best-practices/SKILL.md` for flake and overlay patterns.
