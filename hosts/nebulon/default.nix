@@ -22,6 +22,13 @@
     };
   };
   boot.loader.efi.canTouchEfiVariables = true;
+
+  # Swap
+  swapDevices = [
+    { device = "/dev/disk/by-uuid/60e89eeb-088e-413e-8a8d-0e4f2ec790e6"; }
+  ];
+
+  boot.resumeDevice = "/dev/disk/by-uuid/60e89eeb-088e-413e-8a8d-0e4f2ec790e6";
 	
   programs.hyprland.enable = true;
 
