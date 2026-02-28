@@ -3,7 +3,7 @@ let
   username = userProfile.username;
   homeDirectory =
     if pkgs.stdenv.isDarwin then "/Users/${username}" else "/home/${username}";
-  keys = import ./keys.nix;
+  keys = import ../keys.nix;
   authorizedKeys = builtins.attrValues keys;
 in
 {
