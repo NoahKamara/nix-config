@@ -84,19 +84,19 @@ for i in "${!DISK_IDS[@]}"; do
   name="${seen_devices[$target]}"
   size=$(lsblk -ndro SIZE "$target" 2>/dev/null || echo "???")
   model=$(lsblk -ndro MODEL "$target" 2>/dev/null || echo "")
-  echo "  [$i] $target  ($size) $model"
-  echo "      by-id: $name"
+  echo "  [$((i + 1))] $target  ($size) $model"
+  echo "       by-id: $name"
 done
 echo ""
 
 read -rp "Disk number: " disk_idx
 
-if ! [[ "$disk_idx" =~ ^[0-9]+$ ]] || [[ "$disk_idx" -ge ${#DISK_IDS[@]} ]]; then
+if ! [[ "$disk_idx" =~ ^[0-9]+$ ]] || [[ "$disk_idx" -lt 1 ]] || [[ "$disk_idx" -gt ${#DISK_IDS[@]} ]]; then
   error "Invalid selection."
   exit 1
 fi
 
-SELECTED_TARGET="${DISK_IDS[$disk_idx]}"
+SELECTED_TARGET="${DISK_IDS[$((disk_idx - 1))]}"
 SELECTED_NAME="${seen_devices[$SELECTED_TARGET]}"
 SELECTED_DISK="/dev/disk/by-id/$SELECTED_NAME"
 
