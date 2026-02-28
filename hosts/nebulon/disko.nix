@@ -1,11 +1,12 @@
 { ... }:
 let
-  # Adjust to the correct target disk if needed.
   diskDevice = "/dev/nvme0n1";
 in
 {
   boot.initrd.systemd.enable = true;
   boot.initrd.systemd.tpm2.enable = true;
+
+  boot.resumeDevice = "/dev/vg0/swap";
 
   security.tpm2 = {
     enable = true;
@@ -31,13 +32,6 @@ in
             };
           };
 
-          swap = {
-            size = "20G";
-            content = {
-              type = "swap";
-            };
-          };
-
           root = {
             size = "100%";
             content = {
@@ -48,9 +42,47 @@ in
                 crypttabExtraOpts = [ "tpm2-device=auto" ];
               };
               content = {
-                type = "filesystem";
-                format = "ext4";
+                type = "lvm_pv";
+                vg = "vg0";
+              };
+            };
+          };
+        };
+      };
+    };
+
+    lvm_vg.vg0 = {
+      type = "lvm_vg";
+      lvs = {
+        swap = {
+          size = "20G";
+          content = {
+            type = "swap";
+            resumeDevice = true;
+          };
+        };
+
+        root = {
+          size = "100%FREE";
+          content = {
+            type = "btrfs";
+            extraArgs = [ "-f" ];
+            subvolumes = {
+              "@" = {
                 mountpoint = "/";
+                mountOptions = [ "compress=zstd" "noatime" ];
+              };
+              "@home" = {
+                mountpoint = "/home";
+                mountOptions = [ "compress=zstd" "noatime" ];
+              };
+              "@nix" = {
+                mountpoint = "/nix";
+                mountOptions = [ "compress=zstd" "noatime" ];
+              };
+              "@snapshots" = {
+                mountpoint = "/.snapshots";
+                mountOptions = [ "compress=zstd" "noatime" ];
               };
             };
           };
