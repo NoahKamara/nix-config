@@ -54,10 +54,33 @@ darwin-rebuild switch --flake ".#hammerhead"
 
 ## Hosts
 
+### Fresh install (auto-detect OS)
+
+Use this on a fresh machine. It auto-detects macOS vs NixOS and runs the correct host installer.
+
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/noahkamara/nix-config/main/install.sh)
+```
+
 ### Hammerhead (macOS)
 
-### Rebuild
-macOS workstation managed via nix-darwin and Home Manager. See [Setup macOS](#setup-macos) for bootstrap instructions.
+macOS workstation managed via nix-darwin and Home Manager.
+
+#### Fresh install (one command, Lix)
+
+On a freshly set up macOS machine:
+
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/noahkamara/nix-config/main/install.sh)
+```
+
+The script will:
+1. Ensure Xcode Command Line Tools are installed
+2. Install Lix (if `nix` is not already available)
+3. Clone this repository
+4. Run the first `darwin-rebuild switch --flake .#hammerhead`
+
+#### Rebuild
 
 ```bash
 darwin-rebuild switch --flake .#hammerhead
@@ -79,7 +102,7 @@ Boot from a NixOS installer/live ISO, then:
 
 ```bash
 sudo -i
-nix-shell -p curl --run "bash <(curl -sL https://raw.githubusercontent.com/noahkamara/nix-config/main/hosts/nebulon/install.sh)"
+nix-shell -p curl --run "bash <(curl -sL https://raw.githubusercontent.com/noahkamara/nix-config/main/install.sh)"
 ```
 
 The script will:

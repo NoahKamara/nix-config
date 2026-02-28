@@ -165,13 +165,32 @@ fi
 info "Installing NixOS..."
 nixos-install --flake ".#${FLAKE_HOST}" --no-root-passwd
 
+# --- Step 6: Enroll TPM2 for automatic LUKS unlock ---
+
+LUKS_PART="/dev/disk/by-partlabel/disk-main-root"
+
+echo ""
+if [[ -e /dev/tpmrm0 ]]; then
+  info "TPM2 device detected. Enrolling for automatic LUKS unlock..."
+  info "You will be prompted for the LUKS passphrase you just set."
+  echo ""
+  if systemd-cryptenroll "$LUKS_PART" --tpm2-device=auto; then
+    info "TPM2 enrolled successfully — disk will auto-unlock on boot."
+  else
+    warn "TPM2 enrollment failed. You can retry after reboot with:"
+    warn "  sudo systemd-cryptenroll $LUKS_PART --tpm2-device=auto"
+  fi
+else
+  warn "No TPM2 device found (/dev/tpmrm0 missing)."
+  warn "The system will ask for a LUKS passphrase on every boot."
+  warn "To enroll TPM2 later:"
+  warn "  sudo systemd-cryptenroll $LUKS_PART --tpm2-device=auto"
+fi
+
 echo ""
 echo -e "${GREEN}${BOLD}╔══════════════════════════════════════════════════════════════╗${NC}"
 echo -e "${GREEN}${BOLD}║              Installation complete!                          ║${NC}"
 echo -e "${GREEN}${BOLD}╚══════════════════════════════════════════════════════════════╝${NC}"
-echo ""
-info "After reboot, enroll TPM2 for automatic LUKS unlock:"
-info "  sudo systemd-cryptenroll /dev/disk/by-partlabel/disk-main-root --tpm2-device=auto"
 echo ""
 
 read -rp "Reboot now? [y/N] " do_reboot
