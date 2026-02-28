@@ -95,6 +95,11 @@ lib.mkIf pkgs.stdenv.isLinux {
         disable_splash_rendering = true;
       };
 
+      cursor = {
+        # Keep cursor visible longer to avoid rapid hide/show blinking on small moves.
+        inactive_timeout = 30;
+      };
+
       bind = [
         # Launcher: single-instance toggle on key press.
         "SUPER, SPACE, exec, ${wofiToggle}/bin/wofi-toggle"
