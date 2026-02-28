@@ -82,12 +82,16 @@
               inherit gpuSupport;
             };
             pythonOverrides = final: prev:
-              (basePythonOverrides final prev)
-              // {
-                mss = prev.mss.overridePythonAttrs (_: {
-                  doCheck = false;
-                });
-              };
+              let
+                baseOverrides = (basePythonOverrides final prev) // {
+                  mss = prev.mss.overridePythonAttrs (_: {
+                    doCheck = false;
+                  });
+                };
+              in
+              # xformers frequently fails to compile from source in this setup.
+              # Removing it avoids the failing native extension build path.
+              builtins.removeAttrs baseOverrides [ "xformers" ];
           in
           import "${comfyui-nix}/nix/packages.nix" {
             pkgs = comfyPkgs;
