@@ -1,5 +1,34 @@
 { pkgs, lib, ... }:
 
+let
+  wofiToggle = pkgs.writeShellScriptBin "wofi-toggle" ''
+    set -eu
+
+    pidfile="''${XDG_RUNTIME_DIR:-/tmp}/wofi-toggle.pid"
+    outfile="$(${pkgs.coreutils}/bin/mktemp)"
+    trap '${pkgs.coreutils}/bin/rm -f "$outfile"' EXIT
+
+    if [ -f "$pidfile" ]; then
+      pid="$(${pkgs.coreutils}/bin/cat "$pidfile" 2>/dev/null || true)"
+      if [ -n "$pid" ] && ${pkgs.procps}/bin/kill -0 "$pid" 2>/dev/null; then
+        ${pkgs.procps}/bin/kill "$pid" 2>/dev/null || true
+        exit 0
+      fi
+      ${pkgs.coreutils}/bin/rm -f "$pidfile"
+    fi
+
+    ${pkgs.wofi}/bin/wofi --show drun --define drun-print_desktop_file=true >"$outfile" &
+    wofi_pid=$!
+    printf '%s\n' "$wofi_pid" >"$pidfile"
+
+    wait "$wofi_pid" || true
+    ${pkgs.coreutils}/bin/rm -f "$pidfile"
+
+    app="$(${pkgs.coreutils}/bin/cat "$outfile")"
+    [ -n "$app" ] || exit 0
+    ${pkgs.gtk3}/bin/gtk-launch "$(${pkgs.coreutils}/bin/printf %s "$app" | ${pkgs.gnused}/bin/sed 's/\.desktop$//')"
+  '';
+in
 lib.mkIf pkgs.stdenv.isLinux {
 
   # ── Hyprland ────────────────────────────────────────────────────────
@@ -46,10 +75,10 @@ lib.mkIf pkgs.stdenv.isLinux {
         enabled = true;
         bezier = "ease, 0.25, 0.1, 0.25, 1";
         animation = [
-          "windows, 1, 7, ease, popin 85%"
-          "windowsOut, 1, 7, ease, popin 85%"
-          "fade, 1, 4, ease"
-          "workspaces, 1, 3, ease, slide"
+          "windows, 1, 14, ease, popin 85%"
+          "windowsOut, 1, 14, ease, popin 85%"
+          "fade, 1, 10, ease"
+          "workspaces, 1, 8, ease, slide"
         ];
       };
 
@@ -148,8 +177,8 @@ lib.mkIf pkgs.stdenv.isLinux {
       ];
 
       bindr = [
-        # Launcher: toggle on key release, and launch selected desktop entry explicitly.
-        "SUPER, SPACE, exec, sh -c '${pkgs.procps}/bin/pgrep -x wofi >/dev/null && ${pkgs.procps}/bin/pkill -x wofi || app=$(${pkgs.wofi}/bin/wofi --show drun --define drun-print_desktop_file=true); [ -n \"$app\" ] && ${pkgs.gtk3}/bin/gtk-launch \"$(printf %s \"$app\" | ${pkgs.gnused}/bin/sed \"s/\\.desktop$//\")\"'"
+        # Launcher: single-instance toggle on key release.
+        "SUPER, SPACE, exec, ${wofiToggle}/bin/wofi-toggle"
       ];
 
       bindm = [
