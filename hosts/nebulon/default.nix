@@ -23,12 +23,16 @@
   };
   boot.loader.efi.canTouchEfiVariables = true;
 
-  # Swap
+  boot.initrd.luks.devices.cryptswap = {
+    device = "/dev/disk/by-uuid/eaa36e47-8a07-42b1-ae38-e9356d0d4ce7";
+    allowDiscards = true;
+  };
+
   swapDevices = [
-    { device = "/dev/disk/by-uuid/60e89eeb-088e-413e-8a8d-0e4f2ec790e6"; }
+    { device = "/dev/mapper/cryptswap"; }
   ];
 
-  boot.resumeDevice = "/dev/disk/by-uuid/60e89eeb-088e-413e-8a8d-0e4f2ec790e6";
+  boot.resumeDevice = "/dev/mapper/cryptswap";
 	
   programs.hyprland.enable = true;
 
