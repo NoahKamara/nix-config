@@ -140,16 +140,17 @@ fi
 # --- Step 5: Run disko-install ---
 
 echo ""
-info "Partitioning and mounting disk with disko..."
-info "  Flake:  .#${FLAKE_HOST}"
-info "  Disk:   ${SELECTED_DISK}"
-echo ""
+info "Patching disk device in disko.nix → ${SELECTED_DISK}"
+sed -i "s|diskDevice = \".*\"|diskDevice = \"${SELECTED_DISK}\"|" "./hosts/${FLAKE_HOST}/disko.nix"
 
-nix --extra-experimental-features "nix-command flakes" \
-  run 'github:nix-community/disko/latest#disko' -- \
-  --mode destroy,format,mount \
-  --flake ".#${FLAKE_HOST}" \
-  --disk main "$SELECTED_DISK"
+info "Building disko partitioning script..."
+DISKO_SCRIPT=$(nix --extra-experimental-features "nix-command flakes" \
+  build ".#nixosConfigurations.${FLAKE_HOST}.config.system.build.diskoScript" \
+  --print-out-paths --no-link)
+
+info "Partitioning, formatting, and mounting..."
+info "  Disk: ${SELECTED_DISK}"
+"$DISKO_SCRIPT"
 
 info "Activating swap so the NixOS build has enough memory..."
 swapon /dev/vg0/swap || warn "Could not activate swap — continuing anyway"
