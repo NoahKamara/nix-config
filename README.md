@@ -79,9 +79,13 @@ Boot from a NixOS installer/live ISO, then:
 ```bash
 sudo -i
 
+# generate fresh hardware config (without filesystem entries)
+nixos-generate-config --root /tmp/config --no-filesystems
+
 nix-shell -p git
-git clone https://github.com/<your-user>/<your-repo>.git
-cd <your-repo>
+git clone https://github.com/noahkamara/nix-config.git
+cd nix-config
+cp /tmp/config/etc/nixos/hardware-configuration.nix ./hosts/nebulon/hardware-configuration.nix
 
 # identify the target disk (recommended: use /dev/disk/by-id/*)
 lsblk -o NAME,SIZE,TYPE,MODEL,MOUNTPOINTS
@@ -100,6 +104,11 @@ nix --extra-experimental-features "nix-command flakes" \
 
 reboot
 ```
+
+Notes:
+* The generated `/tmp/config/etc/nixos/configuration.nix` is not used in this flake setup.
+* `hosts/nebulon/default.nix` replaces traditional `configuration.nix`.
+* `hosts/nebulon/disko.nix` is the source of truth for partitioning/filesystems/swap.
 
 #### Rebuild
 
