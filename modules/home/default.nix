@@ -79,6 +79,10 @@
   programs.zsh.enable = true;
   programs.fish.enable = true;
 
+  home.sessionVariables = lib.mkIf pkgs.stdenv.isLinux {
+    TERMINAL = "ghostty";
+  };
+
   # macOS Window Management
   home.file.".aerospace.toml" = pkgs.lib.mkIf pkgs.stdenv.isDarwin {
     source = ./aerospace.toml;
