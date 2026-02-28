@@ -4,19 +4,8 @@ Declarative, flake-based system configuration for:
 
 * macOS (via nix-darwin)
 * NixOS (Linux workstation)
-* Windows (via WSL + Home Manager)
 
 This repository provides a single source of truth for system, user, and development environments across machines.
-
----
-
-## Goals
-
-* Single flake for all machines
-* Reusable modules
-* Clear host separation
-* Reproducible development environments
-* Minimal duplication
 
 ---
 
@@ -61,79 +50,82 @@ nix flake update
 darwin-rebuild switch --flake ".#hammerhead"
 ```
 
-### Customize
-
-* Edit `flake.nix` to add packages under `environment.systemPackages`.
-* If this machine's hostname changes, update `networking.hostName` and rename `darwinConfigurations."hammerhead"`.
-
 ---
 
-## Supported Targets
+## Hosts
 
-### macOS
+### Hammerhead (macOS)
 
-Managed via nix-darwin and Home Manager. See [Setup macOS](#setup-macos) for bootstrap and usage.
-
-Build:
+### Rebuild
+macOS workstation managed via nix-darwin and Home Manager. See [Setup macOS](#setup-macos) for bootstrap instructions.
 
 ```bash
 darwin-rebuild switch --flake .#hammerhead
 ```
 
-### NixOS
+### Nebulon (NixOS)
 
-Full declarative system.
+NixOS workstation with full declarative system configuration.
 
-Install (`nebulon`, first-time setup from NixOS installer/live ISO):
+* GPT layout managed by `disko`
+* LUKS root partition unlocked via TPM2
+* 20G swap partition
+* Hyprland desktop with tuigreet
+
+#### Fresh install
+
+Boot from a NixOS installer/live ISO, then:
 
 ```bash
-# become root in the installer shell
 sudo -i
 
-# clone this repo and enter it
 nix-shell -p git
 git clone https://github.com/<your-user>/<your-repo>.git
 cd <your-repo>
 
-# verify target disk in hosts/nebulon/disko.nix (diskDevice)
-lsblk -o NAME,SIZE,TYPE,MODEL
+# identify the target disk (recommended: use /dev/disk/by-id/*)
+lsblk -o NAME,SIZE,TYPE,MODEL,MOUNTPOINTS
+ls -l /dev/disk/by-id | grep -E 'nvme|ata|ssd'
 
-# partition/format/mount according to disko config (destructive)
+# partition + format + install in one step (destructive!)
+# maps disko.devices.disk.main.device to the disk path below
 nix --extra-experimental-features "nix-command flakes" \
-  run github:nix-community/disko -- \
-  --mode disko --flake .#nebulon
+  run 'github:nix-community/disko/latest#disko-install' -- \
+  --flake '.#nebulon' \
+  --disk main /dev/disk/by-id/<your-target-disk>
 
-# install NixOS for nebulon
-nixos-install --flake .#nebulon
+# optional: write EFI boot entries in NVRAM now
+# add this flag before --flake if desired:
+# --write-efi-boot-entries
 
-# reboot into installed system
 reboot
 ```
 
-This host uses:
-* GPT layout managed by `disko`
-* TPM-enabled LUKS root unlock
-* `20G` swap partition
-
-Rebuild (after install, on the installed system):
-
-Build:
+#### Rebuild
 
 ```bash
 sudo nixos-rebuild switch --flake .#nebulon
 ```
 
-### Windows (WSL)
+#### Troubleshooting
 
-User-level configuration via Home Manager inside WSL.
-
-Build:
+If you hit `no space left on device` in the live installer:
 
 ```bash
-home-manager switch --flake .#user@windows-wsl
-```
+# check which filesystem is full
+df -h / /tmp /mnt /mnt/boot
 
-Windows remains native for gaming; development happens inside WSL.
+# if live /tmp is full, keep build temp files on target disk
+mkdir -p /mnt/tmp
+chmod 1777 /mnt/tmp
+export TMPDIR=/mnt/tmp
+
+# retry disko-install
+nix --extra-experimental-features "nix-command flakes" \
+  run 'github:nix-community/disko/latest#disko-install' -- \
+  --flake '.#nebulon' \
+  --disk main /dev/disk/by-id/<your-target-disk>
+```
 
 ---
 
@@ -180,3 +172,15 @@ Optional per-project shells can be added under `devShells` in `flake.nix`.
 ---
 
 For AI agents: see [AGENTS.md](AGENTS.md) for build commands, coding conventions, repository structure, and editing guidance.
+
+---
+
+## Applications
+
+### ComfyUI
+
+Image generation UI, packaged via [comfyui-nix](https://github.com/utensils/comfyui-nix). CUDA GPU acceleration is enabled automatically on `x86_64-linux`.
+
+```bash
+nix run .#comfyui
+```
