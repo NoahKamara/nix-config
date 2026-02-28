@@ -152,8 +152,12 @@ info "Partitioning, formatting, and mounting..."
 info "  Disk: ${SELECTED_DISK}"
 "$DISKO_SCRIPT"
 
-info "Activating swap so the NixOS build has enough memory..."
-swapon /dev/vg0/swap || warn "Could not activate swap — continuing anyway"
+if swapon --show | grep -q '/dev/.*vg0'; then
+  info "Swap already activated by disko"
+else
+  info "Activating swap so the NixOS build has enough memory..."
+  swapon /dev/vg0/swap
+fi
 
 info "Installing NixOS..."
 nixos-install --flake ".#${FLAKE_HOST}" --no-root-passwd
