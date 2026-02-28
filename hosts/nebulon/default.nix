@@ -3,6 +3,7 @@
   imports = [
     ../../modules/shared
     ../../modules/nixos
+    ../../modules/nixos/gaming.nix
     ../../modules/user
     inputs.home-manager.nixosModules.home-manager
   ] ++ lib.optional (builtins.pathExists ./hardware-configuration.nix) ./hardware-configuration.nix ++ [
