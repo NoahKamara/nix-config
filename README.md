@@ -92,7 +92,7 @@ NixOS workstation with full declarative system configuration.
 
 * GPT layout managed by `disko`
 * LUKS-encrypted LVM (TPM2 auto-unlock)
-* LVM: 20G swap (hibernation-ready) + btrfs root with subvolumes
+* LVM: 32G swap (hibernation-ready) + btrfs root with subvolumes
 * btrfs subvolumes: `@`, `@home`, `@nix`, `@snapshots`
 * Hyprland desktop with tuigreet
 
@@ -109,15 +109,11 @@ The script will:
 1. Clone this repo
 2. Generate hardware configuration
 3. List available disks and prompt you to select one
-4. Warn if the disk is already partitioned
-5. Run `disko-install` to partition, format, and install
-6. Offer to reboot
-
-After reboot, enroll TPM2 for automatic LUKS unlock:
-
-```bash
-sudo systemd-cryptenroll /dev/disk/by-partlabel/disk-main-root --tpm2-device=auto
-```
+4. Warn if the disk is already partitioned (requires typing the disk name to confirm)
+5. Patch the selected disk into `disko.nix`, partition, format, and mount
+6. Activate swap and run `nixos-install`
+7. Enroll TPM2 for automatic LUKS unlock (if a TPM2 device is detected)
+8. Offer to reboot
 
 <details>
 <summary>Manual install (without script)</summary>
@@ -129,17 +125,29 @@ nix-shell -p git
 git clone https://github.com/noahkamara/nix-config.git
 cd nix-config
 
-nixos-generate-config --root /tmp/config --no-filesystems
-cp /tmp/config/etc/nixos/hardware-configuration.nix ./hosts/nebulon/hardware-configuration.nix
+nixos-generate-config --root /tmp/hw-config --no-filesystems
+cp /tmp/hw-config/etc/nixos/hardware-configuration.nix ./hosts/nebulon/hardware-configuration.nix
 
 # identify the target disk
 ls -l /dev/disk/by-id/ | grep nvme
 
+# set the disk in disko.nix
+sed -i 's|diskDevice = ".*"|diskDevice = "/dev/disk/by-id/<your-target-disk>"|' ./hosts/nebulon/disko.nix
+git add hosts/nebulon/
+
+# partition, format, and mount
 nix --extra-experimental-features "nix-command flakes" \
-  run 'github:nix-community/disko/latest#disko-install' -- \
-  --write-efi-boot-entries \
-  --flake '.#nebulon' \
-  --disk main /dev/disk/by-id/<your-target-disk>
+  build '.#nixosConfigurations.nebulon.config.system.build.diskoScript' \
+  --print-out-paths --no-link | xargs -I{} bash {}
+
+# activate swap for the build
+swapon /dev/vg0/swap
+
+# install
+nixos-install --flake '.#nebulon' --no-root-passwd
+
+# enroll TPM2 (if available)
+systemd-cryptenroll /dev/disk/by-partlabel/disk-main-root --tpm2-device=auto
 
 reboot
 ```
@@ -147,10 +155,9 @@ reboot
 </details>
 
 Notes:
-* The generated `/tmp/config/etc/nixos/configuration.nix` is not used in this flake setup.
+* The generated `/tmp/hw-config/etc/nixos/configuration.nix` is not used in this flake setup.
 * `hosts/nebulon/default.nix` replaces traditional `configuration.nix`.
 * `hosts/nebulon/disko.nix` is the source of truth for partitioning/filesystems/swap.
-* Swap is sized for 16GB RAM. After upgrading to 32GB, resize with `lvresize -L 34G /dev/vg0/swap && mkswap /dev/vg0/swap`.
 
 #### Rebuild
 
@@ -171,11 +178,8 @@ mkdir -p /mnt/tmp
 chmod 1777 /mnt/tmp
 export TMPDIR=/mnt/tmp
 
-# retry disko-install
-nix --extra-experimental-features "nix-command flakes" \
-  run 'github:nix-community/disko/latest#disko-install' -- \
-  --flake '.#nebulon' \
-  --disk main /dev/disk/by-id/<your-target-disk>
+# retry nixos-install
+nixos-install --flake '.#nebulon' --no-root-passwd
 ```
 
 ---
@@ -194,7 +198,7 @@ Or you can enter a specific shell (like the Swift environment) by running:
 nix develop .#swift
 ```
 
-### Automatic Environment Activation (direnv + Cursor)
+### Automatic Environment Activation (direnv)
 
 This repository includes `direnv` and `nix-direnv` setup via Home Manager to automatically load these shells when you `cd` into a project directory. 
 
@@ -211,10 +215,10 @@ Navigate to the folder in your terminal and allow the environment:
 direnv allow
 ```
 
-**3. Use in Cursor IDE**
-To make Cursor recognize these tools (for language servers, formatters like `swiftformat`, etc.), you have two options:
+**3. Use in VSCode-based IDEs**
+To make VSCode recognize these tools (for language servers, formatters like `swiftformat`, etc.), you have two options:
 * **Option A (Recommended)**: Install the **`direnv`** extension (`mkhl.direnv`) in Cursor. It will automatically load the Nix environment when you open the folder.
-* **Option B**: Launch Cursor directly from the activated terminal (`cursor .`), which passes the Nix environment variables to the editor.
+* **Option B**: Launch VSCoe directly from the activated terminal (`code .`), which passes the Nix environment variables to the editor.
 
 ---
 
