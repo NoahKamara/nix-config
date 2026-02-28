@@ -96,40 +96,18 @@
             inherit pythonOverrides gpuSupport;
           };
 
-        comfyPackages = mkComfyPackages "none";
-        comfyPackagesRocm = mkComfyPackages "rocm";
-        comfyPackagesCuda = mkComfyPackages "cuda";
-        comfyCpu = "${comfyPackages.default}/bin/comfy-ui";
-        comfyRocm =
-          if system == "x86_64-linux" then "${comfyPackagesRocm.default}/bin/comfy-ui" else comfyCpu;
-        comfyCuda =
-          if system == "x86_64-linux" then "${comfyPackagesCuda.default}/bin/comfy-ui" else comfyCpu;
-        comfyDefault = if system == "x86_64-linux" then comfyCuda else comfyCpu;
+        gpuSupport' = if system == "x86_64-linux" then "cuda" else "none";
+        comfy = "${(mkComfyPackages gpuSupport').default}/bin/comfy-ui";
       in
       {
         default = {
           type = "app";
-          program = comfyDefault;
+          program = comfy;
         };
 
         comfyui = {
           type = "app";
-          program = comfyDefault;
-        };
-
-        comfyui-cpu = {
-          type = "app";
-          program = comfyCpu;
-        };
-      } // nixpkgs.lib.optionalAttrs (system == "x86_64-linux") {
-        comfyui-rocm = {
-          type = "app";
-          program = comfyRocm;
-        };
-
-        comfyui-cuda = {
-          type = "app";
-          program = comfyCuda;
+          program = comfy;
         };
       });
   };
