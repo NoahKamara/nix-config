@@ -187,12 +187,12 @@ lib.mkIf pkgs.stdenv.isLinux {
       };
 
       cpu = {
-        format = "  {usage}%";
+        format = " CPU {usage}%";
         interval = 3;
       };
 
       memory = {
-        format = "󰍛  {percentage}%";
+        format = "󰘚 RAM {percentage}%";
         interval = 3;
       };
 
