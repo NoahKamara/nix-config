@@ -27,14 +27,7 @@
   };
   boot.loader.efi.canTouchEfiVariables = true;
 
-  # Mount Windows EFI partition read-only; nofail so boot continues if the disk is absent
-  fileSystems."/mnt/win-efi" = {
-    device = "/dev/disk/by-uuid/__WIN_ESP_UUID__";
-    fsType = "vfat";
-    options = [ "ro" "nofail" "noauto" ];
-  };
-
-  # Sync Windows bootloader to NixOS ESP so systemd-boot can see it
+  # Auto-discover and sync Windows bootloader to NixOS ESP so systemd-boot can see it
   systemd.services.sync-windows-boot = {
     description = "Sync Windows bootloader to NixOS ESP";
     wantedBy = [ "multi-user.target" ];
@@ -45,13 +38,30 @@
     };
     path = [ pkgs.util-linux pkgs.rsync ];
     script = ''
-      if mount /mnt/win-efi 2>/dev/null; then
-        if [ -d /mnt/win-efi/EFI/Microsoft ]; then
-          mkdir -p /boot/EFI/Microsoft
-          rsync -a --delete /mnt/win-efi/EFI/Microsoft/ /boot/EFI/Microsoft/
+      esp_source=$(findmnt -n -o SOURCE /boot)
+      tmpdir=$(mktemp -d)
+
+      for part in /dev/disk/by-uuid/*; do
+        [ -L "$part" ] || continue
+        resolved=$(readlink -f "$part")
+        [ "$resolved" != "$esp_source" ] || continue
+
+        fstype=$(lsblk -nro FSTYPE "$resolved" 2>/dev/null || true)
+        [ "$fstype" = "vfat" ] || continue
+
+        if mount -o ro "$resolved" "$tmpdir" 2>/dev/null; then
+          if [ -f "$tmpdir/EFI/Microsoft/Boot/bootmgfw.efi" ]; then
+            mkdir -p /boot/EFI/Microsoft
+            rsync -a --delete "$tmpdir/EFI/Microsoft/" /boot/EFI/Microsoft/
+            umount "$tmpdir"
+            rmdir "$tmpdir"
+            exit 0
+          fi
+          umount "$tmpdir"
         fi
-        umount /mnt/win-efi
-      fi
+      done
+
+      rmdir "$tmpdir" 2>/dev/null || true
     '';
   };
 

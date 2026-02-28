@@ -162,47 +162,6 @@ else
   swapon /dev/vg0/swap || warn "Could not activate swap — continuing anyway"
 fi
 
-# --- Step 5b: Detect Windows EFI partition ---
-
-echo ""
-info "Scanning for a Windows EFI partition..."
-
-WIN_ESP_UUID=""
-NIXOS_ESP=$(findmnt -n -o SOURCE /boot 2>/dev/null || true)
-
-for part in /dev/disk/by-uuid/*; do
-  [[ -L "$part" ]] || continue
-  resolved=$(readlink -f "$part")
-
-  # Skip the NixOS ESP
-  [[ "$resolved" == "$NIXOS_ESP" ]] && continue
-
-  fstype=$(lsblk -nro FSTYPE "$resolved" 2>/dev/null || true)
-  [[ "$fstype" == "vfat" ]] || continue
-
-  tmpdir=$(mktemp -d)
-  if mount -o ro "$resolved" "$tmpdir" 2>/dev/null; then
-    if [[ -f "$tmpdir/EFI/Microsoft/Boot/bootmgfw.efi" ]]; then
-      WIN_ESP_UUID=$(basename "$part")
-      umount "$tmpdir"
-      rmdir "$tmpdir"
-      break
-    fi
-    umount "$tmpdir"
-  fi
-  rmdir "$tmpdir"
-done
-
-if [[ -n "$WIN_ESP_UUID" ]]; then
-  info "Found Windows bootloader on ESP with UUID: ${WIN_ESP_UUID}"
-  sed -i "s|__WIN_ESP_UUID__|${WIN_ESP_UUID}|" "./hosts/${FLAKE_HOST}/default.nix"
-  nix-shell -p git --run "git add hosts/${FLAKE_HOST}/default.nix"
-  info "Patched Windows ESP UUID into config."
-else
-  warn "No Windows EFI partition found."
-  warn "If you dual-boot, set the UUID manually in hosts/${FLAKE_HOST}/default.nix"
-fi
-
 info "Installing NixOS..."
 nixos-install --flake ".#${FLAKE_HOST}" --no-root-passwd
 
