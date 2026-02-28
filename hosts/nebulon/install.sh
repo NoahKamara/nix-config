@@ -53,10 +53,24 @@ info "Hardware config written to hosts/$FLAKE_HOST/hardware-configuration.nix"
 echo ""
 echo -e "${BOLD}Available disks:${NC}"
 echo ""
-lsblk -o NAME,SIZE,TYPE,MODEL,MOUNTPOINTS -d -e 7,11
+lsblk -o NAME,SIZE,TYPE,MODEL -d -e 7,11
 echo ""
 
-mapfile -t DISK_IDS < <(find /dev/disk/by-id/ -maxdepth 1 -not -name '*-part*' -type l | sort)
+# Collect by-id links, deduplicate by resolved device (keep longest name per device)
+declare -A seen_devices
+declare -a DISK_IDS=()
+
+while IFS= read -r link; do
+  [[ -z "$link" ]] && continue
+  target=$(readlink -f "$link")
+  name=$(basename "$link")
+  if [[ -z "${seen_devices[$target]+x}" ]] || [[ ${#name} -gt ${#seen_devices[$target]} ]]; then
+    if [[ -z "${seen_devices[$target]+x}" ]]; then
+      DISK_IDS+=("$target")
+    fi
+    seen_devices[$target]="$name"
+  fi
+done < <(find /dev/disk/by-id/ -maxdepth 1 -not -name '*-part*' -type l 2>/dev/null | sort)
 
 if [[ ${#DISK_IDS[@]} -eq 0 ]]; then
   error "No disks found in /dev/disk/by-id/. Cannot continue."
@@ -66,11 +80,12 @@ fi
 echo -e "${BOLD}Select a disk by number:${NC}"
 echo ""
 for i in "${!DISK_IDS[@]}"; do
-  link="${DISK_IDS[$i]}"
-  target=$(readlink -f "$link")
-  name=$(basename "$link")
+  target="${DISK_IDS[$i]}"
+  name="${seen_devices[$target]}"
   size=$(lsblk -ndro SIZE "$target" 2>/dev/null || echo "???")
-  echo "  [$i] $name  ($size, $target)"
+  model=$(lsblk -ndro MODEL "$target" 2>/dev/null || echo "")
+  echo "  [$i] $target  ($size) $model"
+  echo "      by-id: $name"
 done
 echo ""
 
@@ -81,9 +96,9 @@ if ! [[ "$disk_idx" =~ ^[0-9]+$ ]] || [[ "$disk_idx" -ge ${#DISK_IDS[@]} ]]; the
   exit 1
 fi
 
-SELECTED_DISK="${DISK_IDS[$disk_idx]}"
-SELECTED_TARGET=$(readlink -f "$SELECTED_DISK")
-SELECTED_NAME=$(basename "$SELECTED_DISK")
+SELECTED_TARGET="${DISK_IDS[$disk_idx]}"
+SELECTED_NAME="${seen_devices[$SELECTED_TARGET]}"
+SELECTED_DISK="/dev/disk/by-id/$SELECTED_NAME"
 
 echo ""
 info "Selected: $SELECTED_NAME"
