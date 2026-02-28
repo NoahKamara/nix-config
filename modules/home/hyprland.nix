@@ -71,7 +71,7 @@ lib.mkIf pkgs.stdenv.isLinux {
 
       bind = [
         # Launcher
-        "SUPER, SPACE, exec, sh -c 'pgrep -x wofi >/dev/null && pkill -x wofi || wofi --show drun'"
+        "SUPER, SPACE, exec, sh -c '${pkgs.procps}/bin/pgrep -x wofi >/dev/null && ${pkgs.procps}/bin/pkill -x wofi || ${pkgs.wofi}/bin/wofi --show drun'"
 
         # Terminal
         "$mod, Return, exec, ghostty"
