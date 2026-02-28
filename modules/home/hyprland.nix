@@ -18,8 +18,8 @@ lib.mkIf pkgs.stdenv.isLinux {
       ];
 
       general = {
-        gaps_in = 4;
-        gaps_out = 8;
+        gaps_in = 0;
+        gaps_out = 0;
         border_size = 2;
         "col.active_border" = "rgba(88c0d0ff) rgba(81a1c1ff) 45deg";
         "col.inactive_border" = "rgba(3b4252ff)";
