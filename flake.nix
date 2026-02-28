@@ -89,9 +89,17 @@
                   });
                 };
               in
-              # xformers frequently fails to compile from source in this setup.
-              # Removing it avoids the failing native extension build path.
-              builtins.removeAttrs baseOverrides [ "xformers" ];
+              baseOverrides
+              // {
+                # Keep xformers enabled but force low parallelism to avoid
+                # cicc/nvcc OOM kills during FlashAttention compilation.
+                xformers = baseOverrides.xformers.overridePythonAttrs (old: {
+                  MAX_JOBS = "1";
+                  NVCC_THREADS = "1";
+                  XFORMERS_DISABLE_FLASH_ATTN = "1";
+                  XFORMERS_DISABLE_FLASH_ATTN_3 = "1";
+                });
+              };
           in
           import "${comfyui-nix}/nix/packages.nix" {
             pkgs = comfyPkgs;
