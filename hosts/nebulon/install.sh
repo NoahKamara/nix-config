@@ -143,6 +143,9 @@ echo ""
 info "Patching disk device in disko.nix → ${SELECTED_DISK}"
 sed -i "s|diskDevice = \".*\"|diskDevice = \"${SELECTED_DISK}\"|" "./hosts/${FLAKE_HOST}/disko.nix"
 
+info "Staging modified files so Nix flakes sees them..."
+nix-shell -p git --run "git add hosts/${FLAKE_HOST}/hardware-configuration.nix hosts/${FLAKE_HOST}/disko.nix"
+
 info "Building disko partitioning script..."
 DISKO_SCRIPT=$(nix --extra-experimental-features "nix-command flakes" \
   build ".#nixosConfigurations.${FLAKE_HOST}.config.system.build.diskoScript" \
@@ -152,11 +155,11 @@ info "Partitioning, formatting, and mounting..."
 info "  Disk: ${SELECTED_DISK}"
 "$DISKO_SCRIPT"
 
-if swapon --show | grep -q '/dev/.*vg0'; then
+if swapon --show=NAME --noheadings | grep -q .; then
   info "Swap already activated by disko"
 else
   info "Activating swap so the NixOS build has enough memory..."
-  swapon /dev/vg0/swap
+  swapon /dev/vg0/swap || warn "Could not activate swap — continuing anyway"
 fi
 
 info "Installing NixOS..."
