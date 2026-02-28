@@ -3,6 +3,7 @@
 {
   imports = [
     ./ghostty.nix
+    ./hyprland.nix
   ];
 
   home.stateVersion = "24.11";
@@ -26,8 +27,6 @@
     '')
   ] ++ lib.optionals pkgs.stdenv.isLinux (with pkgs; [
     wofi
-    waybar
-    mako
     wl-clipboard
     grim
     slurp
@@ -72,33 +71,6 @@
 
   programs.zsh.enable = true;
   programs.fish.enable = true;
-
-  home.pointerCursor = lib.mkIf pkgs.stdenv.isLinux {
-    package = pkgs.adwaita-icon-theme;
-    name = "Adwaita";
-    size = 24;
-    gtk.enable = true;
-    x11.enable = true;
-  };
-
-  wayland.windowManager.hyprland = lib.mkIf pkgs.stdenv.isLinux {
-    enable = true;
-    systemd.enable = false;
-    settings = {
-      bind = [
-        "ALT, SPACE, exec, wofi --show drun"
-      ];
-    };
-  };
-
-  home.sessionVariables = lib.mkIf pkgs.stdenv.isLinux {
-    HYPRCURSOR_THEME = "Adwaita";
-    HYPRCURSOR_SIZE = "24";
-    XCURSOR_THEME = "Adwaita";
-    XCURSOR_SIZE = "24";
-    NIXOS_OZONE_WL = "1";
-    MOZ_ENABLE_WAYLAND = "1";
-  };
 
   # macOS Window Management
   home.file.".aerospace.toml" = pkgs.lib.mkIf pkgs.stdenv.isDarwin {
