@@ -5,7 +5,7 @@ lib.mkIf pkgs.stdenv.isLinux {
   # ── Hyprland ────────────────────────────────────────────────────────
   wayland.windowManager.hyprland = {
     enable = true;
-    systemd.enable = false;
+    systemd.enable = true;
 
     settings = {
       "$mod" = "SUPER";
@@ -59,7 +59,8 @@ lib.mkIf pkgs.stdenv.isLinux {
       };
 
       input = {
-        follow_mouse = 1;
+        # Click-to-focus is less prone to accidental focus/input weirdness.
+        follow_mouse = 0;
         sensitivity = 0;
       };
 
@@ -77,6 +78,8 @@ lib.mkIf pkgs.stdenv.isLinux {
 
         # Window management
         "$mod, Q, killactive"
+        "$mod CTRL, R, exec, hyprctl reload"
+        "$mod CTRL SHIFT, Q, exec, hyprctl dispatch killactive"
         "$mod, F, fullscreen, 0"
         "$mod SHIFT, F, togglefloating"
         "$mod, P, pseudo"
