@@ -58,13 +58,13 @@ lib.mkIf pkgs.stdenv.isLinux {
       decoration = {
         rounding = 8;
         blur = {
-          enabled = true;
+          enabled = false;
           size = 4;
           passes = 2;
           new_optimizations = true;
         };
         shadow = {
-          enabled = true;
+          enabled = false;
           range = 8;
           render_power = 2;
           color = "rgba(1a1a1aee)";
@@ -72,7 +72,7 @@ lib.mkIf pkgs.stdenv.isLinux {
       };
 
       animations = {
-        enabled = true;
+        enabled = false;
         bezier = "ease, 0.25, 0.1, 0.25, 1";
         animation = [
           "windows, 1, 14, ease, popin 85%"
@@ -99,6 +99,9 @@ lib.mkIf pkgs.stdenv.isLinux {
       };
 
       bind = [
+        # Launcher: single-instance toggle on key press.
+        "SUPER, SPACE, exec, ${wofiToggle}/bin/wofi-toggle"
+
         # Terminal
         "$mod, Return, exec, ghostty"
 
@@ -176,17 +179,19 @@ lib.mkIf pkgs.stdenv.isLinux {
         ", XF86MonBrightnessDown, exec, brightnessctl set 5%-"
       ];
 
-      bindr = [
-        # Launcher: single-instance toggle on key release.
-        "SUPER, SPACE, exec, ${wofiToggle}/bin/wofi-toggle"
-      ];
-
       bindm = [
         "$mod, mouse:272, movewindow"
         "$mod, mouse:273, resizewindow"
       ];
     };
   };
+
+  xdg.configFile."wofi/style.css".text = ''
+    * {
+      animation: none;
+      transition: none;
+    }
+  '';
 
   # ── Waybar ──────────────────────────────────────────────────────────
   programs.waybar = {
