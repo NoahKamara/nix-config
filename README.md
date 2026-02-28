@@ -84,6 +84,24 @@ darwin-rebuild switch --flake .#hammerhead
 
 Full declarative system.
 
+Install (`nebulon`, first-time setup with `disko`):
+
+```bash
+# 1) Review disk target in hosts/nebulon/disko.nix (diskDevice)
+# 2) Partition/format/mount according to disko config (destructive)
+sudo nix run github:nix-community/disko -- --mode disko --flake .#nebulon
+
+# 3) Install NixOS for nebulon
+sudo nixos-install --flake .#nebulon
+```
+
+This host uses:
+* GPT layout managed by `disko`
+* TPM-enabled LUKS root unlock
+* `20G` swap partition
+
+Rebuild (after install):
+
 Build:
 
 ```bash

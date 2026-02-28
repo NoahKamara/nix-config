@@ -5,7 +5,10 @@
     ../../modules/nixos
     ../../modules/user
     inputs.home-manager.nixosModules.home-manager
-  ] ++ lib.optional (builtins.pathExists ./hardware-configuration.nix) ./hardware-configuration.nix;
+  ] ++ lib.optional (builtins.pathExists ./hardware-configuration.nix) ./hardware-configuration.nix ++ [
+    inputs.disko.nixosModules.disko
+    ./disko.nix
+  ];
 
   networking.hostName = "nebulon";
   networking.networkmanager.enable = true;
@@ -22,17 +25,6 @@
     };
   };
   boot.loader.efi.canTouchEfiVariables = true;
-
-  boot.initrd.luks.devices.cryptswap = {
-    device = "/dev/disk/by-uuid/eaa36e47-8a07-42b1-ae38-e9356d0d4ce7";
-    allowDiscards = true;
-  };
-
-  swapDevices = [
-    { device = "/dev/mapper/cryptswap"; }
-  ];
-
-  boot.resumeDevice = "/dev/mapper/cryptswap";
 
   programs.hyprland.enable = true;
 
