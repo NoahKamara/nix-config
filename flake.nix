@@ -95,17 +95,17 @@
                 # cicc/nvcc OOM kills during FlashAttention compilation.
                 xformers = baseOverrides.xformers.overridePythonAttrs (old: {
                   enableParallelBuilding = false;
-                  MAX_JOBS = "1";
+                  MAX_JOBS = "2";
                   NVCC_THREADS = "1";
-                  NIX_BUILD_CORES = "1";
-                  CMAKE_BUILD_PARALLEL_LEVEL = "1";
+                  NIX_BUILD_CORES = "2";
+                  CMAKE_BUILD_PARALLEL_LEVEL = "2";
                   XFORMERS_DISABLE_FLASH_ATTN = "1";
                   XFORMERS_DISABLE_FLASH_ATTN_3 = "1";
                   preBuild = (old.preBuild or "") + ''
-                    export MAX_JOBS=1
+                    export MAX_JOBS=2
                     export NVCC_THREADS=1
-                    export NIX_BUILD_CORES=1
-                    export CMAKE_BUILD_PARALLEL_LEVEL=1
+                    export NIX_BUILD_CORES=2
+                    export CMAKE_BUILD_PARALLEL_LEVEL=2
                     export TORCH_CUDA_ARCH_LIST=8.9
                     export CUDAARCHS=89
                   '';
