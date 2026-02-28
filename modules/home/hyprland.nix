@@ -70,9 +70,6 @@ lib.mkIf pkgs.stdenv.isLinux {
       };
 
       bind = [
-        # Launcher
-        "SUPER, SPACE, exec, sh -c '${pkgs.procps}/bin/pgrep -x wofi >/dev/null && ${pkgs.procps}/bin/pkill -x wofi || ${pkgs.wofi}/bin/wofi --show drun'"
-
         # Terminal
         "$mod, Return, exec, ghostty"
 
@@ -148,6 +145,11 @@ lib.mkIf pkgs.stdenv.isLinux {
         # Brightness
         ", XF86MonBrightnessUp, exec, brightnessctl set 5%+"
         ", XF86MonBrightnessDown, exec, brightnessctl set 5%-"
+      ];
+
+      bindr = [
+        # Launcher: toggle on key release, and launch selected desktop entry explicitly.
+        "SUPER, SPACE, exec, sh -c '${pkgs.procps}/bin/pgrep -x wofi >/dev/null && ${pkgs.procps}/bin/pkill -x wofi || app=$(${pkgs.wofi}/bin/wofi --show drun --define drun-print_desktop_file=true); [ -n \"$app\" ] && ${pkgs.gtk3}/bin/gtk-launch \"$(printf %s \"$app\" | ${pkgs.gnused}/bin/sed \"s/\\.desktop$//\")\"'"
       ];
 
       bindm = [
