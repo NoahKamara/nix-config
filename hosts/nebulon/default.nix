@@ -76,7 +76,7 @@
     settings = {
       default_session = {
         user = "greeter";
-        command = "${pkgs.tuigreet}/bin/tuigreet --time --remember --remember-session --sessions /run/current-system/sw/share/wayland-sessions";
+        command = "${pkgs.tuigreet}/bin/tuigreet --time --remember --remember-session --sessions /run/current-system/sw/share/wayland-sessions --cmd Hyprland";
       };
     };
   };
@@ -124,11 +124,21 @@
 
   systemd.user.services.wayvnc = {
     description = "WayVNC server";
-    after = [ "graphical-session.target" ];
-    partOf = [ "graphical-session.target" ];
-    wantedBy = [ "graphical-session.target" ];
+    wantedBy = [ "default.target" ];
     serviceConfig = {
-      ExecStart = "${pkgs.wayvnc}/bin/wayvnc 0.0.0.0 5900";
+      ExecStart = pkgs.writeShellScript "start-wayvnc" ''
+        set -eu
+
+        runtime_dir="/run/user/$(id -u)"
+        while true; do
+          socket="$(ls "$runtime_dir"/wayland-* 2>/dev/null | head -n1 || true)"
+          if [ -n "$socket" ]; then
+            wayland_display="$(basename "$socket")"
+            exec ${pkgs.wayvnc}/bin/wayvnc 0.0.0.0 5900 --socket "$wayland_display"
+          fi
+          sleep 2
+        done
+      '';
       Restart = "on-failure";
       RestartSec = 2;
     };
