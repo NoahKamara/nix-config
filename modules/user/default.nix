@@ -3,6 +3,8 @@ let
   username = userProfile.username;
   homeDirectory =
     if pkgs.stdenv.isDarwin then "/Users/${username}" else "/home/${username}";
+  keys = import ./keys.nix;
+  authorizedKeys = builtins.attrValues keys;
 in
 {
   users.users.${username} =
@@ -14,8 +16,8 @@ in
     // lib.optionalAttrs pkgs.stdenv.isLinux {
       isNormalUser = true;
       extraGroups = [ "wheel" "networkmanager" ];
-      # Keep user systemd available across logouts so rebuild can reload user units.
       linger = true;
+      openssh.authorizedKeys.keys = authorizedKeys;
     };
 
   home-manager = {
