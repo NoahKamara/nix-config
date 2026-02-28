@@ -140,16 +140,22 @@ fi
 # --- Step 5: Run disko-install ---
 
 echo ""
-info "Starting disko-install..."
+info "Partitioning and mounting disk with disko..."
 info "  Flake:  .#${FLAKE_HOST}"
 info "  Disk:   ${SELECTED_DISK}"
 echo ""
 
 nix --extra-experimental-features "nix-command flakes" \
-  run 'github:nix-community/disko/latest#disko-install' -- \
-  --write-efi-boot-entries \
+  run 'github:nix-community/disko/latest#disko' -- \
+  --mode destroy,format,mount \
   --flake ".#${FLAKE_HOST}" \
   --disk main "$SELECTED_DISK"
+
+info "Activating swap so the NixOS build has enough memory..."
+swapon /dev/vg0/swap || warn "Could not activate swap — continuing anyway"
+
+info "Installing NixOS..."
+nixos-install --flake ".#${FLAKE_HOST}" --no-root-passwd
 
 echo ""
 echo -e "${GREEN}${BOLD}╔══════════════════════════════════════════════════════════════╗${NC}"
