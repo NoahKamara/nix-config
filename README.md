@@ -68,8 +68,9 @@ darwin-rebuild switch --flake .#hammerhead
 NixOS workstation with full declarative system configuration.
 
 * GPT layout managed by `disko`
-* LUKS root partition unlocked via TPM2
-* 20G swap partition
+* LUKS-encrypted LVM (TPM2 auto-unlock)
+* LVM: 20G swap (hibernation-ready) + btrfs root with subvolumes
+* btrfs subvolumes: `@`, `@home`, `@nix`, `@snapshots`
 * Hyprland desktop with tuigreet
 
 #### Fresh install
@@ -78,37 +79,55 @@ Boot from a NixOS installer/live ISO, then:
 
 ```bash
 sudo -i
+nix-shell -p curl --run "bash <(curl -sL https://raw.githubusercontent.com/noahkamara/nix-config/main/hosts/nebulon/install.sh)"
+```
 
-# generate fresh hardware config (without filesystem entries)
-nixos-generate-config --root /tmp/config --no-filesystems
+The script will:
+1. Clone this repo
+2. Generate hardware configuration
+3. List available disks and prompt you to select one
+4. Warn if the disk is already partitioned
+5. Run `disko-install` to partition, format, and install
+6. Offer to reboot
+
+After reboot, enroll TPM2 for automatic LUKS unlock:
+
+```bash
+sudo systemd-cryptenroll /dev/disk/by-partlabel/disk-main-root --tpm2-device=auto
+```
+
+<details>
+<summary>Manual install (without script)</summary>
+
+```bash
+sudo -i
 
 nix-shell -p git
 git clone https://github.com/noahkamara/nix-config.git
 cd nix-config
+
+nixos-generate-config --root /tmp/config --no-filesystems
 cp /tmp/config/etc/nixos/hardware-configuration.nix ./hosts/nebulon/hardware-configuration.nix
 
-# identify the target disk (recommended: use /dev/disk/by-id/*)
-lsblk -o NAME,SIZE,TYPE,MODEL,MOUNTPOINTS
-ls -l /dev/disk/by-id | grep -E 'nvme|ata|ssd'
+# identify the target disk
+ls -l /dev/disk/by-id/ | grep nvme
 
-# partition + format + install in one step (destructive!)
-# maps disko.devices.disk.main.device to the disk path below
 nix --extra-experimental-features "nix-command flakes" \
   run 'github:nix-community/disko/latest#disko-install' -- \
+  --write-efi-boot-entries \
   --flake '.#nebulon' \
   --disk main /dev/disk/by-id/<your-target-disk>
 
-# optional: write EFI boot entries in NVRAM now
-# add this flag before --flake if desired:
-# --write-efi-boot-entries
-
 reboot
 ```
+
+</details>
 
 Notes:
 * The generated `/tmp/config/etc/nixos/configuration.nix` is not used in this flake setup.
 * `hosts/nebulon/default.nix` replaces traditional `configuration.nix`.
 * `hosts/nebulon/disko.nix` is the source of truth for partitioning/filesystems/swap.
+* Swap is sized for 16GB RAM. After upgrading to 32GB, resize with `lvresize -L 34G /dev/vg0/swap && mkswap /dev/vg0/swap`.
 
 #### Rebuild
 
