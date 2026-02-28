@@ -1,4 +1,8 @@
 { self, inputs, lib, pkgs, ... }:
+let
+  keyPath = "/etc/keys/cryptswap.key";
+  hasKey = builtins.pathExists keyPath;
+in
 {
   imports = [
     ../../modules/shared
@@ -23,17 +27,25 @@
   };
   boot.loader.efi.canTouchEfiVariables = true;
 
-  boot.initrd.luks.devices.cryptswap = {
+  boot.initrd.secrets = lib.mkIf hasKey {
+    "/cryptswap.key" = keyPath;
+  };
+
+  boot.initrd.luks.devices.cryptswap = lib.mkIf hasKey {
     device = "/dev/disk/by-uuid/eaa36e47-8a07-42b1-ae38-e9356d0d4ce7";
+    keyFile = "/cryptswap.key";
     allowDiscards = true;
   };
 
-  swapDevices = [
+  swapDevices = lib.mkIf hasKey [
     { device = "/dev/mapper/cryptswap"; }
   ];
 
-  boot.resumeDevice = "/dev/mapper/cryptswap";
-	
+  boot.resumeDevice = lib.mkIf hasKey "/dev/mapper/cryptswap";
+
+  warnings = lib.optional (!hasKey)
+    "cryptswap keyfile missing - encrypted swap disabled";
+
   programs.hyprland.enable = true;
 
   services.xserver.enable = false;
