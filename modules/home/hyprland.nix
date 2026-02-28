@@ -46,8 +46,8 @@ lib.mkIf pkgs.stdenv.isLinux {
         enabled = true;
         bezier = "ease, 0.25, 0.1, 0.25, 1";
         animation = [
-          "windows, 1, 4, ease, slide"
-          "windowsOut, 1, 4, ease, slide"
+          "windows, 1, 7, ease, popin 85%"
+          "windowsOut, 1, 7, ease, popin 85%"
           "fade, 1, 4, ease"
           "workspaces, 1, 3, ease, slide"
         ];
