@@ -17,7 +17,13 @@ let
       ${pkgs.coreutils}/bin/rm -f "$pidfile"
     fi
 
-    ${pkgs.wofi}/bin/wofi --show drun --define drun-print_desktop_file=true >"$outfile" &
+    ${pkgs.wofi}/bin/wofi \
+      --show drun \
+      --define drun-print_desktop_file=true \
+      --width 720 \
+      --height 480 \
+      --lines 12 \
+      >"$outfile" &
     wofi_pid=$!
     printf '%s\n' "$wofi_pid" >"$pidfile"
 
