@@ -165,7 +165,24 @@ fi
 info "Installing NixOS..."
 nixos-install --flake ".#${FLAKE_HOST}" --no-root-passwd
 
-# --- Step 6: Enroll TPM2 for automatic LUKS unlock ---
+# --- Step 6: Set passwords ---
+
+USERNAME=$(nix --extra-experimental-features "nix-command flakes" eval \
+  ".#nixosConfigurations.${FLAKE_HOST}.config.users.users" \
+  --apply 'users: builtins.head (builtins.filter (n: users.${n}.isNormalUser) (builtins.attrNames users))' \
+  --raw)
+
+info "Detected user: ${USERNAME}"
+
+echo ""
+info "Setting root password..."
+nixos-enter --root /mnt -c "passwd root"
+
+echo ""
+info "Setting password for user '${USERNAME}'..."
+nixos-enter --root /mnt -c "passwd ${USERNAME}"
+
+# --- Step 7: Enroll TPM2 for automatic LUKS unlock ---
 
 LUKS_PART="/dev/disk/by-partlabel/disk-main-root"
 
