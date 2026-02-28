@@ -26,7 +26,6 @@
   boot.initrd.luks.devices.cryptswap = {
     device = "/dev/disk/by-uuid/eaa36e47-8a07-42b1-ae38-e9356d0d4ce7";
     allowDiscards = true;
-    tpm2.enable = true;
   };
 
   swapDevices = [
