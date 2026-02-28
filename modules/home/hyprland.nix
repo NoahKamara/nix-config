@@ -71,7 +71,7 @@ lib.mkIf pkgs.stdenv.isLinux {
 
       bind = [
         # Launcher
-        "ALT, SPACE, exec, wofi --show drun"
+        "SUPER, SPACE, exec, sh -c 'pgrep -x wofi >/dev/null && pkill -x wofi || wofi --show drun'"
 
         # Terminal
         "$mod, Return, exec, ghostty"
@@ -187,26 +187,26 @@ lib.mkIf pkgs.stdenv.isLinux {
       };
 
       cpu = {
-        format = "  {usage}%";
+        format = "  {usage}%";
         interval = 3;
       };
 
       memory = {
-        format = "  {percentage}%";
+        format = "󰍛  {percentage}%";
         interval = 3;
       };
 
       pulseaudio = {
         format = "{icon} {volume}%";
-        format-muted = "  muted";
-        format-icons.default = [ "" "" "" ];
+        format-muted = "󰝟 muted";
+        format-icons.default = [ "" "" "" ];
         on-click = "pavucontrol";
       };
 
       network = {
-        format-wifi = "  {signalStrength}%";
-        format-ethernet = "  {ifname}";
-        format-disconnected = "  off";
+        format-wifi = "󰤨  {signalStrength}%";
+        format-ethernet = "󰈀  {ifname}";
+        format-disconnected = "󰖪 off";
         tooltip-format = "{ifname}: {ipaddr}/{cidr}";
       };
 
