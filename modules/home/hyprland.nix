@@ -5,9 +5,6 @@ let
     set -eu
 
     pidfile="''${XDG_RUNTIME_DIR:-/tmp}/wofi-toggle.pid"
-    outfile="$(${pkgs.coreutils}/bin/mktemp)"
-    trap '${pkgs.coreutils}/bin/rm -f "$outfile"' EXIT
-
     if [ -f "$pidfile" ]; then
       pid="$(${pkgs.coreutils}/bin/cat "$pidfile" 2>/dev/null || true)"
       if [ -n "$pid" ] && ${pkgs.procps}/bin/kill -0 "$pid" 2>/dev/null; then
@@ -19,20 +16,14 @@ let
 
     ${pkgs.wofi}/bin/wofi \
       --show drun \
-      --define drun-print_desktop_file=true \
       --width 720 \
       --height 480 \
-      --lines 12 \
-      >"$outfile" &
+      --lines 12 &
     wofi_pid=$!
     printf '%s\n' "$wofi_pid" >"$pidfile"
 
     wait "$wofi_pid" || true
     ${pkgs.coreutils}/bin/rm -f "$pidfile"
-
-    app="$(${pkgs.coreutils}/bin/cat "$outfile")"
-    [ -n "$app" ] || exit 0
-    ${pkgs.gtk3}/bin/gtk-launch "$(${pkgs.coreutils}/bin/printf %s "$app" | ${pkgs.gnused}/bin/sed 's/\.desktop$//')"
   '';
 in
 lib.mkIf pkgs.stdenv.isLinux {
