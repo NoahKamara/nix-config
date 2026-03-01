@@ -20,20 +20,10 @@
     enable = true;
     pkiBundle = "/var/lib/sbctl";
   };
-  boot.loader.systemd-boot = {
-    enable = lib.mkForce false;
-    configurationLimit = 10;
-    editor = false;
-    extraEntries = {
-      "windows.conf" = ''
-        title Windows
-        efi /EFI/Microsoft/Boot/bootmgfw.efi
-      '';
-    };
-  };
+  boot.loader.systemd-boot.enable = lib.mkForce false;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  # Auto-discover and sync Windows bootloader to NixOS ESP so systemd-boot can see it
+  # Auto-discover and sync Windows bootloader to the NixOS ESP.
   systemd.services.sync-windows-boot = {
     description = "Sync Windows bootloader to NixOS ESP";
     wantedBy = [ "multi-user.target" ];
