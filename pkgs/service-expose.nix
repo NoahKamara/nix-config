@@ -1,7 +1,7 @@
 { pkgs }:
 
 pkgs.writeShellScriptBin "service-expose" ''
-  set -eu
+  set -euo pipefail
 
   usage() {
     cat >&2 <<'EOF'
@@ -16,7 +16,8 @@ EOF
   routes_collection_endpoint="''${api_base}/config/apps/http/servers/srv0/routes"
 
   list_services() {
-    ${pkgs.curl}/bin/curl -fsS "$routes_collection_endpoint" \
+    routes_json="$(${pkgs.curl}/bin/curl -fsS "$routes_collection_endpoint")"
+    printf '%s' "$routes_json" \
       | ${pkgs.jq}/bin/jq -r '
         if type != "array" then
           empty
@@ -81,9 +82,22 @@ EOF
       --arg upstream "$upstream" \
       '{
         "@id": $id,
+        terminal: true,
         match: [{ path: [$path, "\($path)/*"] }],
         handle: [
-          { handler: "rewrite", strip_path_prefix: $path },
+          {
+            handler: "subroute",
+            routes: [
+              {
+                match: [{ path: [$path] }],
+                handle: [{ handler: "rewrite", uri: "/" }]
+              },
+              {
+                match: [{ path: ["\($path)/*"] }],
+                handle: [{ handler: "rewrite", strip_path_prefix: $path }]
+              }
+            ]
+          },
           { handler: "reverse_proxy", upstreams: [{ dial: $upstream }] }
         ]
       }')"
