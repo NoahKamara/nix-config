@@ -165,6 +165,28 @@ Notes:
 sudo nixos-rebuild switch --flake .#nebulon
 ```
 
+#### Encrypted user vault (`~/vault.img`)
+
+`nebulon` includes a `vault` shell command that manages a Disko-backed encrypted image file in your home directory:
+
+* Image path: `~/vault.img`
+* Maximum size: `100G` (sparse file)
+* Mount point: `~/Vault`
+* Encryption: LUKS
+
+Commands:
+
+```bash
+vault open
+vault status
+vault close
+```
+
+Notes:
+* `vault open` creates `~/vault.img` on first run, then uses `disko --mode format,mount` to initialize/mount it.
+* `vault close` unmounts `~/Vault` and closes the LUKS mapper.
+* The command uses `sudo` for mount/cryptsetup operations, so it will prompt for your password.
+
 #### Troubleshooting
 
 If you hit `no space left on device` in the live installer:
