@@ -126,7 +126,21 @@ EOF
   }
 
   unregister_route() {
-    ${pkgs.curl}/bin/curl -fsS -X DELETE "$id_endpoint" >/dev/null 2>&1 || true
+    max_attempts=5
+    attempt=1
+
+    while [ "$attempt" -le "$max_attempts" ]; do
+      if ${pkgs.curl}/bin/curl -fsS -X DELETE "$id_endpoint" >/dev/null 2>&1; then
+        return 0
+      fi
+
+      if [ "$attempt" -lt "$max_attempts" ]; then
+        sleep 1
+      fi
+      attempt=$((attempt + 1))
+    done
+
+    return 0
   }
 
   child_pid=""
@@ -145,7 +159,7 @@ EOF
     unregister_route
   }
 
-  trap cleanup EXIT INT TERM
+  trap cleanup EXIT INT TERM HUP QUIT
 
   register_route
   "$@" &
