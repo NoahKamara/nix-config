@@ -61,8 +61,26 @@ pkgs.writeShellScriptBin "service-expose" ''
     ${pkgs.curl}/bin/curl -fsS -X DELETE "$id_endpoint" >/dev/null 2>&1 || true
   }
 
-  trap unregister_route EXIT INT TERM
+  child_pid=""
+  cleanup_ran=0
+
+  cleanup() {
+    # Avoid running cleanup twice when both signal and EXIT traps fire.
+    if [ "$cleanup_ran" -eq 1 ]; then
+      return
+    fi
+    cleanup_ran=1
+
+    if [ -n "$child_pid" ]; then
+      kill "$child_pid" >/dev/null 2>&1 || true
+    fi
+    unregister_route
+  }
+
+  trap cleanup EXIT INT TERM
 
   register_route
-  "$@"
+  "$@" &
+  child_pid=$!
+  wait "$child_pid"
 ''
