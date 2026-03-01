@@ -3,6 +3,7 @@
   imports = [
     ../../modules/shared
     ../../modules/darwin
+    ../../modules/darwin/service-proxy.nix
     ../../modules/darwin/gaming.nix
     ../../modules/user
     inputs.home-manager.darwinModules.home-manager

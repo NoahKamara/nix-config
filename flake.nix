@@ -110,8 +110,8 @@
 
         gpuSupport' = if system == "x86_64-linux" then "cuda" else "none";
         comfy = "${(mkComfyPackages gpuSupport').default}/bin/comfy-ui";
-        comfyWrapper = comfyPkgs.writeShellScript "comfy-ui" ''
-          exec ${comfy} --listen 0.0.0.0 "$@"
+        comfyServeWrapper = comfyPkgs.writeShellScript "comfy-ui-serve" ''
+          exec service-expose comfy /comfy 127.0.0.1:8188 -- ${comfy} --listen 127.0.0.1 --port 8188 "$@"
         '';
       in
       {
@@ -127,7 +127,7 @@
 
         comfyui-serve = {
           type = "app";
-          program = comfyWrapper;
+          program = "${comfyServeWrapper}";
         };
       });
   };

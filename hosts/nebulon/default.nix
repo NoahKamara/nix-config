@@ -3,6 +3,7 @@
   imports = [
     ../../modules/shared
     ../../modules/nixos
+    ../../modules/nixos/service-proxy.nix
     ../../modules/nixos/gaming.nix
     ../../modules/user
     inputs.home-manager.nixosModules.home-manager
@@ -120,7 +121,7 @@
     wayvnc
   ];
 
-  networking.firewall.allowedTCPPorts = [ 5900 8188 ];
+  networking.firewall.allowedTCPPorts = [ 5900 ];
 
   systemd.user.services.wayvnc = {
     description = "WayVNC server";
