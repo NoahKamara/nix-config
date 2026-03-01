@@ -28,4 +28,4 @@ pkgs.writeText "service-proxy-caddy.json" ''
       }
     }
   }
-'';
+''
