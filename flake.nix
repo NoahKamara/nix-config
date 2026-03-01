@@ -110,6 +110,9 @@
 
         gpuSupport' = if system == "x86_64-linux" then "cuda" else "none";
         comfy = "${(mkComfyPackages gpuSupport').default}/bin/comfy-ui";
+        comfyWrapper = comfyPkgs.writeShellScript "comfy-ui" ''
+          exec ${comfy} --listen 0.0.0.0 "$@"
+        '';
       in
       {
         default = {
@@ -120,6 +123,11 @@
         comfyui = {
           type = "app";
           program = comfy;
+        };
+
+        comfyui-serve = {
+          type = "app";
+          program = comfyWrapper;
         };
       });
   };

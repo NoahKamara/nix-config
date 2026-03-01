@@ -120,7 +120,7 @@
     wayvnc
   ];
 
-  networking.firewall.allowedTCPPorts = [ 5900 ];
+  networking.firewall.allowedTCPPorts = [ 5900 8188 ];
 
   systemd.user.services.wayvnc = {
     description = "WayVNC server";
