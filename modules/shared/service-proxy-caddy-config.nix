@@ -11,18 +11,7 @@ pkgs.writeText "service-proxy-caddy.json" ''
             "listen": [
               ":8080"
             ],
-            "routes": [
-              {
-                "@id": "fallback-404",
-                "handle": [
-                  {
-                    "handler": "static_response",
-                    "status_code": 404,
-                    "body": "Not Found"
-                  }
-                ]
-              }
-            ]
+            "routes": []
           }
         }
       }
