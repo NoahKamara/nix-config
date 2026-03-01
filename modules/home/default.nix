@@ -110,6 +110,7 @@ in
     fd
     tree
     lazygit
+    zed-editor
     (writeShellScriptBin "use-nix" ''
       config_path="''${NIX_CONFIG_DIR:-$HOME/.nix-config}"
       shell_name="''${1:-default}"
@@ -185,5 +186,14 @@ in
   # macOS Window Management
   home.file.".aerospace.toml" = pkgs.lib.mkIf pkgs.stdenv.isDarwin {
     source = ./aerospace.toml;
+  };
+
+  # Zed
+  xdg.configFile."zed/settings.json".text = builtins.toJSON {
+    auto_update = false;
+    vim_mode = true;
+    vim = {
+        toggle_relative_line_numbers = true;
+    };
   };
 }
