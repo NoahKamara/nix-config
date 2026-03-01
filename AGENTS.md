@@ -5,6 +5,7 @@ This file is intentionally short and only covers non-obvious, repo-specific pitf
 ## Scope And Priority
 
 - If this file conflicts with explicit user instructions, follow the user.
+- Do not change implementation approach to work around sandbox/tooling limitations unless explicitly requested by the user.
 - Keep hosts thin. Put reusable logic in modules.
 - Prefer small edits in existing modules over creating new abstractions.
 
