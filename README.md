@@ -261,3 +261,27 @@ Image generation UI, packaged via [comfyui-nix](https://github.com/utensils/comf
 ```bash
 nix run .#comfyui
 ```
+
+### service-expose
+
+`service-expose` dynamically exposes a local service through the host Caddy proxy on port `8080`.
+
+Usage:
+
+```bash
+service-expose <name> <path> <upstream> -- <command> [args...]
+```
+
+Example (run ComfyUI behind `/comfy`):
+
+```bash
+service-expose comfy /comfy 127.0.0.1:8188 -- nix run .#comfyui
+```
+
+List active exposed services:
+
+```bash
+service-expose ls
+```
+
+When `service-expose` exits (including `Ctrl+C`), it unregisters the dynamic route from Caddy.
