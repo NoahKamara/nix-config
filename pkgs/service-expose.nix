@@ -49,12 +49,27 @@ pkgs.writeShellScriptBin "service-expose" ''
         ]
       }')"
 
-    ${pkgs.curl}/bin/curl -fsS -X DELETE "$id_endpoint" >/dev/null 2>&1 || true
-    ${pkgs.curl}/bin/curl -fsS \
-      -H "Content-Type: application/json" \
-      -X POST \
-      --data "$payload" \
-      "$routes_endpoint" >/dev/null
+    max_attempts=5
+    attempt=1
+
+    while [ "$attempt" -le "$max_attempts" ]; do
+      ${pkgs.curl}/bin/curl -fsS -X DELETE "$id_endpoint" >/dev/null 2>&1 || true
+      if ${pkgs.curl}/bin/curl -fsS \
+        -H "Content-Type: application/json" \
+        -X POST \
+        --data "$payload" \
+        "$routes_endpoint" >/dev/null; then
+        return 0
+      fi
+
+      if [ "$attempt" -lt "$max_attempts" ]; then
+        sleep 1
+      fi
+      attempt=$((attempt + 1))
+    done
+
+    echo "service-expose: failed to register route '$route_id' after $max_attempts attempts" >&2
+    return 1
   }
 
   unregister_route() {
