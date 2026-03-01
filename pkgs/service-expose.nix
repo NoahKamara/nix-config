@@ -72,8 +72,15 @@ EOF
   esac
 
   route_id="service-''${name}"
-  routes_endpoint="''${api_base}/config/apps/http/servers/srv0/routes/0"
-  id_endpoint="''${api_base}/id/''${route_id}"
+  routes_endpoint="''${api_base}/config/apps/http/servers/srv0/routes"
+  replace_routes() {
+    routes_json="$1"
+    ${pkgs.curl}/bin/curl -fsS \
+      -H "Content-Type: application/json" \
+      -X PUT \
+      --data "$routes_json" \
+      "$routes_endpoint" >/dev/null
+  }
 
   register_route() {
     payload="$(${pkgs.jq}/bin/jq -n \
@@ -106,12 +113,18 @@ EOF
     attempt=1
 
     while [ "$attempt" -le "$max_attempts" ]; do
-      ${pkgs.curl}/bin/curl -fsS -X DELETE "$id_endpoint" >/dev/null 2>&1 || true
-      if ${pkgs.curl}/bin/curl -fsS \
-        -H "Content-Type: application/json" \
-        -X POST \
-        --data "$payload" \
-        "$routes_endpoint" >/dev/null; then
+      existing_routes="$(${pkgs.curl}/bin/curl -fsS "$routes_endpoint")"
+      updated_routes="$(printf '%s' "$existing_routes" \
+        | ${pkgs.jq}/bin/jq -c \
+          --arg id "$route_id" \
+          --argjson route "$payload" '
+            (if type == "array" then . else [] end)
+            | map(select((."@id" // "") != $id))
+            | [$route] + .
+            | (map(select((."@id" // "") != "fallback-404")) + map(select((."@id" // "") == "fallback-404")))
+          ')"
+
+      if replace_routes "$updated_routes"; then
         return 0
       fi
 
@@ -130,7 +143,16 @@ EOF
     attempt=1
 
     while [ "$attempt" -le "$max_attempts" ]; do
-      if ${pkgs.curl}/bin/curl -fsS -X DELETE "$id_endpoint" >/dev/null 2>&1; then
+      existing_routes="$(${pkgs.curl}/bin/curl -fsS "$routes_endpoint")"
+      updated_routes="$(printf '%s' "$existing_routes" \
+        | ${pkgs.jq}/bin/jq -c \
+          --arg id "$route_id" '
+            (if type == "array" then . else [] end)
+            | map(select((."@id" // "") != $id))
+            | (map(select((."@id" // "") != "fallback-404")) + map(select((."@id" // "") == "fallback-404")))
+          ')"
+
+      if replace_routes "$updated_routes"; then
         return 0
       fi
 
