@@ -204,6 +204,41 @@ export TMPDIR=/mnt/tmp
 nixos-install --flake '.#nebulon' --no-root-passwd
 ```
 
+
+### Chimaera (VPS NixOS)
+
+Minimal VPS-focused NixOS host installed remotely from this repo with `nixos-anywhere`.
+
+Notes:
+* Partitioning/formatting is handled by Disko (`hosts/chimaera/disko.nix`).
+> **⚠️ WARNING:** Ensure your SSH key is present in `modules/keys.nix` **before** install — otherwise you will be locked out after first boot.
+
+#### Fresh install from Debian VPS
+
+From your local machine (in this repo), run:
+
+```bash
+cd /Users/noahkamara/.nix-config
+
+# optional: verify target disk on the VPS first
+# ssh root@debian-4gb-nbg1-1 'lsblk -o NAME,SIZE,TYPE,MOUNTPOINT'
+
+nix run github:nix-community/nixos-anywhere -- \
+  --flake .#chimaera \
+  --target-host root@chimaera.noahkamara.com \
+  --generate-hardware-config nixos-generate-config ./hosts/chimaera/hardware-configuration.nix \
+  --build-on local # if you're building on a different architecture use `remote`
+```
+
+This will wipe the selected disk and reinstall the machine as NixOS.
+The target disk comes from `hosts/chimaera/disko.nix` (`diskDevice`).
+
+After reboot:
+
+```bash
+ssh noah@chimaera.noahkamara.com
+```
+
 ---
 
 ## Development Shells

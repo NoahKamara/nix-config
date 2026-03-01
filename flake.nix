@@ -26,6 +26,7 @@
     };
   in
   {
+    # Macbook Pro 14"
     darwinConfigurations."hammerhead" = nix-darwin.lib.darwinSystem {
       specialArgs = { 
         inherit self inputs;
@@ -34,9 +35,16 @@
       modules = [ ./hosts/hammerhead ];
     };
 
+    # Workstation PC
     nixosConfigurations."nebulon" = nixpkgs.lib.nixosSystem {
       specialArgs = { inherit self inputs userProfile; };
       modules = [ ./hosts/nebulon ];
+    };
+
+    # VPS
+    nixosConfigurations."chimaera" = nixpkgs.lib.nixosSystem {
+      specialArgs = { inherit self inputs userProfile; };
+      modules = [ ./hosts/chimaera ];
     };
 
     devShells = forAllSystems (system:
