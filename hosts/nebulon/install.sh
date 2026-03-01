@@ -204,6 +204,51 @@ else
   warn "  sudo systemd-cryptenroll $LUKS_PART --tpm2-device=auto"
 fi
 
+# --- Step 8: Provision and enroll Secure Boot keys (Lanzaboote) ---
+
+echo ""
+if [[ -d /sys/firmware/efi/efivars ]]; then
+  info "UEFI environment detected. Preparing Secure Boot keys for Lanzaboote..."
+  info "This is a one-time per-machine step."
+
+  if nixos-enter --root /mnt -c "sbctl create-keys"; then
+    info "Secure Boot keys created."
+  else
+    warn "Could not create Secure Boot keys in installer environment."
+    warn "After first boot, run:"
+    warn "  sudo sbctl create-keys"
+  fi
+
+  echo ""
+  read -rp "Enroll Secure Boot keys into firmware now (recommended)? [Y/n] " enroll_now
+  if [[ "${enroll_now,,}" != "n" ]]; then
+    read -rp "Keep Microsoft keys for Windows dual-boot compatibility? [Y/n] " keep_ms
+
+    if [[ "${keep_ms,,}" == "n" ]]; then
+      ENROLL_CMD="sbctl enroll-keys"
+    else
+      ENROLL_CMD="sbctl enroll-keys --microsoft"
+    fi
+
+    if nixos-enter --root /mnt -c "$ENROLL_CMD"; then
+      info "Secure Boot keys enrolled successfully."
+    else
+      warn "Secure Boot key enrollment failed in installer environment."
+      warn "After first boot, run:"
+      warn "  sudo $ENROLL_CMD"
+    fi
+  else
+    warn "Skipped key enrollment."
+    warn "After first boot, run:"
+    warn "  sudo sbctl enroll-keys --microsoft"
+  fi
+else
+  warn "No EFI variable filesystem detected (/sys/firmware/efi/efivars missing)."
+  warn "Skipping key enrollment. After first boot in UEFI mode, run:"
+  warn "  sudo sbctl create-keys"
+  warn "  sudo sbctl enroll-keys --microsoft"
+fi
+
 echo ""
 echo -e "${GREEN}${BOLD}╔══════════════════════════════════════════════════════════════╗${NC}"
 echo -e "${GREEN}${BOLD}║              Installation complete!                          ║${NC}"

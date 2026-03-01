@@ -7,6 +7,7 @@
     ../../modules/nixos/gaming.nix
     ../../modules/user
     inputs.home-manager.nixosModules.home-manager
+    inputs.lanzaboote.nixosModules.lanzaboote
   ] ++ lib.optional (builtins.pathExists ./hardware-configuration.nix) ./hardware-configuration.nix ++ [
     inputs.disko.nixosModules.disko
     ./disko.nix
@@ -15,8 +16,12 @@
   networking.hostName = "nebulon";
   networking.networkmanager.enable = true;
 
-  boot.loader.systemd-boot = {
+  boot.lanzaboote = {
     enable = true;
+    pkiBundle = "/var/lib/sbctl";
+  };
+  boot.loader.systemd-boot = {
+    enable = lib.mkForce false;
     configurationLimit = 10;
     editor = false;
     extraEntries = {
@@ -125,6 +130,7 @@
   };
 
   environment.systemPackages = with pkgs; [
+    sbctl
     wayvnc
   ];
 
