@@ -20,6 +20,8 @@ in
       openssh.authorizedKeys.keys = authorizedKeys;
     };
 
+  programs.fish.enable = lib.mkIf pkgs.stdenv.isLinux true;
+
   home-manager = {
     useGlobalPkgs = true;
     useUserPackages = true;

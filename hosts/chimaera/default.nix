@@ -1,4 +1,4 @@
-{ inputs, lib, pkgs, ... }:
+{ self, inputs, lib, ... }:
 let
   keys = import ../../modules/keys.nix;
   authorizedKeys = builtins.attrValues keys;
@@ -33,13 +33,6 @@ in
   };
 
   users.users.root.openssh.authorizedKeys.keys = authorizedKeys;
-  programs.fish.enable = true;
-
-  environment.pathsToLink = [
-    "/share/applications"
-    "/share/xdg-desktop-portal"
-  ];
-
   boot.loader.grub = {
     enable = true;
     devices = [ "/dev/sda" ];
@@ -50,6 +43,7 @@ in
 
   services.qemuGuest.enable = true;
 
+  system.configurationRevision = self.rev or self.dirtyRev or null;
   system.stateVersion = "24.11";
   nixpkgs.hostPlatform = "x86_64-linux";
 }
