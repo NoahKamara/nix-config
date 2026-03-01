@@ -3,8 +3,48 @@
 pkgs.writeShellScriptBin "service-expose" ''
   set -eu
 
+  usage() {
+    cat >&2 <<'EOF'
+usage:
+  service-expose <name> <path> <upstream> -- <command> [args...]
+  service-expose list
+  service-expose ls
+EOF
+  }
+
+  api_base="''${SERVICE_EXPOSE_API_BASE:-http://127.0.0.1:2019}"
+  routes_collection_endpoint="''${api_base}/config/apps/http/servers/srv0/routes"
+
+  list_services() {
+    ${pkgs.curl}/bin/curl -fsS "$routes_collection_endpoint" \
+      | ${pkgs.jq}/bin/jq -r '
+        if type != "array" then
+          empty
+        else
+          map(select((."@id" // "") | startswith("service-")))
+          | .[]
+          | [
+              (."@id" | sub("^service-"; "")),
+              ((.match // [] | .[0]? | .path // [] | .[0]?) // ""),
+              ((.handle // [] | map(select(.handler == "reverse_proxy")) | .[0]? | .upstreams // [] | .[0]? | .dial) // "")
+            ]
+          | @tsv
+        end' \
+      | while IFS="$(printf '\t')" read -r name path upstream; do
+          if [ -n "$name" ]; then
+            printf '%s\t%s\t%s\n' "$name" "$path" "$upstream"
+          fi
+        done
+  }
+
+  if [ "$#" -eq 1 ] && [ "$1" = "list" -o "$1" = "ls" ]; then
+    printf 'NAME\tPATH\tUPSTREAM\n'
+    list_services
+    exit 0
+  fi
+
   if [ "$#" -lt 4 ]; then
-    echo "usage: service-expose <name> <path> <upstream> -- <command> [args...]" >&2
+    usage
     exit 1
   fi
 
@@ -30,7 +70,6 @@ pkgs.writeShellScriptBin "service-expose" ''
       ;;
   esac
 
-  api_base="''${SERVICE_EXPOSE_API_BASE:-http://127.0.0.1:2019}"
   route_id="service-''${name}"
   routes_endpoint="''${api_base}/config/apps/http/servers/srv0/routes/0"
   id_endpoint="''${api_base}/id/''${route_id}"

@@ -1,76 +1,74 @@
-{ pkgs, lib, userProfile, ... }:
+{ pkgs, lib, inputs, userProfile, ... }:
 let
+  vaultDiskoConfig = pkgs.writeText "vault-disko.nix" ''
+    { imagePath, mountPoint, mapperName ? "vaultimg", ... }:
+    {
+      disko.devices = {
+        disk.vault = {
+          type = "disk";
+          device = imagePath;
+          content = {
+            type = "luks";
+            name = mapperName;
+            content = {
+              type = "filesystem";
+              format = "ext4";
+              mountpoint = mountPoint;
+              mountOptions = [ "defaults" "noatime" ];
+            };
+          };
+        };
+      };
+    }
+  '';
+
   vaultCommand = pkgs.writeShellScriptBin "vault" ''
     set -euo pipefail
 
     image="$HOME/vault.img"
     mountpoint="$HOME/Vault"
-    volume_name="Vault"
+    mapper_name="vaultimg"
 
     usage() {
       echo "Usage: vault <open|close|status>" >&2
       exit 1
     }
 
-    read_passphrase() {
-      if [ ! -t 0 ]; then
-        echo "Interactive terminal required for passphrase entry." >&2
-        exit 1
-      fi
-
-      printf "Vault passphrase: " >&2
-      stty -echo
-      IFS= read -r passphrase
-      stty echo
-      printf "\n" >&2
-
-      if [ -z "$passphrase" ]; then
-        echo "Passphrase cannot be empty." >&2
-        exit 1
-      fi
-    }
-
     is_mounted() {
-      /sbin/mount | ${pkgs.gnugrep}/bin/grep -Fq " on $mountpoint "
+      ${pkgs.util-linux}/bin/findmnt "$mountpoint" >/dev/null 2>&1
     }
 
     open_vault() {
       if [ ! -e "$image" ]; then
-        echo "Creating encrypted sparsebundle at $image (max 100G)..."
-        read_passphrase
-        printf "%s" "$passphrase" | /usr/bin/hdiutil create \
-          -type SPARSEBUNDLE \
-          -fs APFS \
-          -volname "$volume_name" \
-          -size 100g \
-          -encryption AES-256 \
-          -stdinpass \
-          "$image"
+        echo "Creating sparse image at $image (100G max)..."
+        ${pkgs.coreutils}/bin/truncate -s 100G "$image"
       fi
-
-      mkdir -p "$mountpoint"
 
       if is_mounted; then
         echo "Vault is already mounted at $mountpoint"
         return
       fi
 
-      read_passphrase
-      printf "%s" "$passphrase" | /usr/bin/hdiutil attach \
-        -stdinpass \
-        -mountpoint "$mountpoint" \
-        "$image"
+      ${pkgs.coreutils}/bin/mkdir -p "$mountpoint"
+      sudo ${inputs.disko.packages.${pkgs.system}.default}/bin/disko \
+        --mode format,mount \
+        --argstr imagePath "$image" \
+        --argstr mountPoint "$mountpoint" \
+        --argstr mapperName "$mapper_name" \
+        ${vaultDiskoConfig}
 
       echo "Vault mounted at $mountpoint"
     }
 
     close_vault() {
-      if ! is_mounted; then
-        echo "Vault is not mounted."
-        return
+      if is_mounted; then
+        sudo ${pkgs.util-linux}/bin/umount "$mountpoint"
       fi
 
-      /usr/bin/hdiutil detach "$mountpoint"
+      if sudo ${pkgs.cryptsetup}/bin/cryptsetup status "$mapper_name" >/dev/null 2>&1; then
+        sudo ${pkgs.cryptsetup}/bin/cryptsetup close "$mapper_name"
+      fi
+
       echo "Vault unmounted."
     }
 
@@ -125,8 +123,6 @@ in
       direnv allow
     '')
     (import ../../pkgs/service-expose.nix { inherit pkgs; })
-  ] ++ lib.optionals pkgs.stdenv.isDarwin [
-    vaultCommand
   ] ++ lib.optionals pkgs.stdenv.isLinux (with pkgs; [
     wofi
     wl-clipboard
@@ -135,6 +131,7 @@ in
     brightnessctl
     playerctl
     pavucontrol
+    vaultCommand
   ]);
 
   programs.home-manager.enable = true;

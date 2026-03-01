@@ -1,4 +1,4 @@
-{ pkgs, lib, userProfile, ... }:
+{ pkgs, lib, inputs, userProfile, ... }:
 let
   username = userProfile.username;
   homeDirectory =
@@ -24,7 +24,9 @@ in
     useGlobalPkgs = true;
     useUserPackages = true;
     backupFileExtension = "backup";
-    extraSpecialArgs = { inherit userProfile; };
+    extraSpecialArgs = {
+      inherit inputs userProfile;
+    };
     users.${username} = import ../home;
   };
 }
