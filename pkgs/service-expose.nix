@@ -14,6 +14,8 @@ EOF
 
   api_base="''${SERVICE_EXPOSE_API_BASE:-http://127.0.0.1:2019}"
   routes_collection_endpoint="''${api_base}/config/apps/http/servers/srv0/routes"
+  full_config_endpoint="''${api_base}/config/"
+  load_endpoint="''${api_base}/load"
 
   list_services() {
     routes_json="$(${pkgs.curl}/bin/curl -fsS "$routes_collection_endpoint")"
@@ -75,11 +77,17 @@ EOF
   routes_endpoint="''${api_base}/config/apps/http/servers/srv0/routes"
   replace_routes() {
     routes_json="$1"
+    current_config="$(${pkgs.curl}/bin/curl -fsS "$full_config_endpoint")"
+    next_config="$(printf '%s' "$current_config" \
+      | ${pkgs.jq}/bin/jq -c \
+        --argjson routes "$routes_json" '
+          .apps.http.servers.srv0.routes = $routes
+        ')"
     ${pkgs.curl}/bin/curl -fsS \
       -H "Content-Type: application/json" \
-      -X PUT \
-      --data "$routes_json" \
-      "$routes_endpoint" >/dev/null
+      -X POST \
+      --data "$next_config" \
+      "$load_endpoint" >/dev/null
   }
 
   register_route() {
