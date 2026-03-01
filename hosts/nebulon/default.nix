@@ -1,4 +1,4 @@
-{ self, inputs, lib, pkgs, ... }:
+{ self, inputs, lib, pkgs, config, ... }:
 {
   imports = [
     ../../modules/shared
@@ -93,7 +93,14 @@
     alsa.support32Bit = true;
   };
 
+  services.xserver.videoDrivers = [ "nvidia" ];
   hardware.graphics.enable = true;
+  hardware.nvidia = {
+    modesetting.enable = true;
+    open = false;
+    nvidiaSettings = true;
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
+  };
 
   xdg.portal = {
     enable = true;
