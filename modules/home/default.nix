@@ -50,7 +50,7 @@ let
       fi
 
       ${pkgs.coreutils}/bin/mkdir -p "$mountpoint"
-      sudo ${inputs.disko.packages.${pkgs.system}.default}/bin/disko \
+      sudo ${inputs.disko.packages.${pkgs.stdenv.hostPlatform.system}.default}/bin/disko \
         --mode format,mount \
         --argstr imagePath "$image" \
         --argstr mountPoint "$mountpoint" \
