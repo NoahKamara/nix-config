@@ -47,6 +47,12 @@
       modules = [ ./hosts/chimaera ];
     };
 
+    # NAS
+    nixosConfigurations."stardust" = nixpkgs.lib.nixosSystem {
+      specialArgs = { inherit self inputs userProfile; };
+      modules = [ ./hosts/stardust ];
+    };
+
     devShells = forAllSystems (system:
       let
         pkgs = import nixpkgs {
