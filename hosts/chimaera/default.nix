@@ -18,6 +18,12 @@ in
   networking.fqdn = "chimaera.noahkamara.com";
   networking.useNetworkd = true;
   networking.firewall.allowedUDPPorts = [ 51820 ];
+  networking.nat = {
+    enable = true;
+    # SNAT/MASQUERADE tunnel egress so replies route back through the VPS.
+    externalInterface = "en+";
+    internalInterfaces = [ "wg0" ];
+  };
 
   # Forwarding is required so the VPS can route traffic between tunnel peers
   # and toward networks reachable behind a peer.
