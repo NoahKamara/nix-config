@@ -15,6 +15,7 @@ in
 
   networking.hostName = "chimaera";
   networking.domain = "chimaera.noahkamara.com";
+  networking.fqdn = "chimaera.noahkamara.com";
   networking.useNetworkd = true;
   networking.firewall.allowedUDPPorts = [ 51820 ];
 
