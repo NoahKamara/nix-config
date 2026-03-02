@@ -158,7 +158,7 @@
 
     deploy = {
       # Allow extra time for post-activation reconnect when network services restart.
-      confirmTimeout = 120;
+      confirmTimeout = 300;
       nodes =
         nixpkgs.lib.genAttrs nixosDeployHosts
           (host:

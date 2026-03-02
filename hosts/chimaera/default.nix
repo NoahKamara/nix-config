@@ -61,22 +61,23 @@ in
         allowedIPs = [
           "10.44.0.2/32"
           "fd42:44:44::2/128"
+          "192.168.178.0/24"
         ];
       }
       {
         # home-network
         publicKey = "W4+RVW+EUFaGhDMGN+VN2e/HxojGizhmHusmyKdC/Fw=";
         allowedIPs = [
-          "10.44.0.2/32"
-          "fd42:44:44::2/128"
+          "10.44.0.3/32"
+          "fd42:44:44::3/128"
         ];
       }
       {
         # hammerhead
         publicKey = "hZfrGb9gDFAm0OyQgF1MauMCTw8btwXGQ9LsixQYWS8=";
         allowedIPs = [
-          "10.44.0.3/32"
-          "fd42:44:44::3/128"
+          "10.44.0.4/32"
+          "fd42:44:44::4/128"
         ];
       }
     ];
@@ -128,13 +129,13 @@ in
     enable = true;
     email = "mail@noahkamara.com";
     virtualHosts."jellyfin.chimaera.noahkamara.com".extraConfig = ''
-      reverse_proxy 10.44.0.2:8096
+      reverse_proxy [fd42:44:44:0::2]:8096
     '';
     virtualHosts."jellyseerr.chimaera.noahkamara.com".extraConfig = ''
-      reverse_proxy 10.44.0.2:5055
+      reverse_proxy [fd42:44:44:0::2]:5055
     '';
     virtualHosts."ha.chimaera.noahkamara.com".extraConfig = ''
-      reverse_proxy 10.44.0.2:8123
+      reverse_proxy [fd42:44:44:0::2]:8123
     '';
   };
 
