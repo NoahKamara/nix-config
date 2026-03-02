@@ -1,4 +1,10 @@
-{ self, inputs, lib, pkgs, ... }:
+{
+  self,
+  inputs,
+  lib,
+  pkgs,
+  ...
+}:
 let
   keys = import ../../modules/keys.nix;
   authorizedKeys = builtins.attrValues keys;
@@ -11,13 +17,18 @@ in
     inputs.home-manager.nixosModules.home-manager
     inputs.disko.nixosModules.disko
     ./disko.nix
-  ] ++ lib.optional (builtins.pathExists ./hardware-configuration.nix) ./hardware-configuration.nix;
+  ]
+  ++ lib.optional (builtins.pathExists ./hardware-configuration.nix) ./hardware-configuration.nix;
 
   networking.hostName = "chimaera";
   networking.domain = "chimaera.noahkamara.com";
   networking.fqdn = "chimaera.noahkamara.com";
   networking.useNetworkd = true;
   networking.firewall.allowedUDPPorts = [ 51820 ];
+  networking.firewall.allowedTCPPorts = [
+    80
+    443
+  ];
   networking.nat = {
     enable = true;
     # SNAT/MASQUERADE tunnel egress so replies route back through the VPS.
@@ -80,7 +91,10 @@ in
     description = "Generate WireGuard private key for wg0";
     before = [ "systemd-networkd.service" ];
     requiredBy = [ "systemd-networkd.service" ];
-    path = [ pkgs.coreutils pkgs.wireguard-tools ];
+    path = [
+      pkgs.coreutils
+      pkgs.wireguard-tools
+    ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
@@ -112,6 +126,7 @@ in
 
   services.caddy = {
     enable = true;
+    email = "mail@noahkamara.com";
     virtualHosts."jellyfin.chimaera.noahkamara.com".extraConfig = ''
       reverse_proxy 10.44.0.2:8096
     '';
