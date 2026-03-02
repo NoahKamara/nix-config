@@ -1,4 +1,4 @@
-{ self, inputs, lib, pkgs, ... }:
+{ self, inputs, lib, pkgs, authorizedKeys, ... }:
 let
   keys = import ../../modules/keys.nix;
   authorizedKeys = builtins.attrValues keys;
