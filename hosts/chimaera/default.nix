@@ -57,30 +57,30 @@ in
 
     peers = [
       {
-        # stardust peer
-        publicKey = "";
+        # home-network
+        publicKey = "W4+RVW+EUFaGhDMGN+VN2e/HxojGizhmHusmyKdC/Fw=";
         allowedIPs = [
           "10.44.0.2/32"
           "fd42:44:44::2/128"
           "192.168.178.0/24"
         ];
       }
-      {
-        # home-network
-        publicKey = "W4+RVW+EUFaGhDMGN+VN2e/HxojGizhmHusmyKdC/Fw=";
-        allowedIPs = [
-          "10.44.0.3/32"
-          "fd42:44:44::3/128"
-        ];
-      }
-      {
-        # hammerhead
-        publicKey = "hZfrGb9gDFAm0OyQgF1MauMCTw8btwXGQ9LsixQYWS8=";
-        allowedIPs = [
-          "10.44.0.4/32"
-          "fd42:44:44::4/128"
-        ];
-      }
+      # {
+      #   # stardust peer
+      #   publicKey = "";
+      #   allowedIPs = [
+      #     "10.44.0.3/32"
+      #     "fd42:44:44::3/128"
+      #   ];
+      # }
+      # {
+      #   # hammerhead
+      #   publicKey = "hZfrGb9gDFAm0OyQgF1MauMCTw8btwXGQ9LsixQYWS8=";
+      #   allowedIPs = [
+      #     "10.44.0.4/32"
+      #     "fd42:44:44::4/128"
+      #   ];
+      # }
     ];
   };
 
@@ -88,11 +88,11 @@ in
     "d /etc/wireguard 0700 root root -"
   ];
 
-  # networkd cannot use generatePrivateKeyFile; create the key before networkd.
+  # Generate the WireGuard key at boot if missing, decoupled from networkd restarts.
   systemd.services.wireguard-keygen-wg0 = {
     description = "Generate WireGuard private key for wg0";
-    before = [ "systemd-networkd.service" ];
-    requiredBy = [ "systemd-networkd.service" ];
+    wantedBy = [ "multi-user.target" ];
+    unitConfig.ConditionPathExists = "!/etc/wireguard/wg0.key";
     path = [
       pkgs.coreutils
       pkgs.wireguard-tools
