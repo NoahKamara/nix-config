@@ -63,11 +63,11 @@ in
     "d /etc/wireguard 0700 root root -"
   ];
 
-  # Generate the server key exactly once if it is missing.
+  # networkd cannot use generatePrivateKeyFile; create the key before networkd.
   systemd.services.wireguard-keygen-wg0 = {
     description = "Generate WireGuard private key for wg0";
-    wantedBy = [ "multi-user.target" ];
-    before = [ "wireguard-wg0.service" ];
+    before = [ "systemd-networkd.service" ];
+    requiredBy = [ "systemd-networkd.service" ];
     path = [ pkgs.coreutils pkgs.wireguard-tools ];
     serviceConfig = {
       Type = "oneshot";
@@ -83,12 +83,6 @@ in
       chmod 600 /etc/wireguard/wg0.key
       chown root:root /etc/wireguard/wg0.key
     '';
-  };
-
-  # Ensure key creation happens before the interface comes up.
-  systemd.services.wireguard-wg0 = {
-    requires = [ "wireguard-keygen-wg0.service" ];
-    after = [ "wireguard-keygen-wg0.service" ];
   };
 
   systemd.network.enable = true;
