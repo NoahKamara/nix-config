@@ -110,6 +110,19 @@ in
     networkConfig.DHCP = "yes";
   };
 
+  services.caddy = {
+    enable = true;
+    virtualHosts."jellyfin.chimaera.noahkamara.com".extraConfig = ''
+      reverse_proxy 10.44.0.2:8096
+    '';
+    virtualHosts."jellyseerr.chimaera.noahkamara.com".extraConfig = ''
+      reverse_proxy 10.44.0.2:5055
+    '';
+    virtualHosts."ha.chimaera.noahkamara.com".extraConfig = ''
+      reverse_proxy 10.44.0.2:8123
+    '';
+  };
+
   services.openssh = {
     enable = true;
     settings = {
