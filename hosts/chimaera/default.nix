@@ -38,24 +38,22 @@ in
     privateKeyFile = "/etc/wireguard/wg0.key";
 
     peers = [
+      # {
+      #   # stardust peer
+      #   publicKey = "";
+      #   allowedIPs = [
+      #     "10.44.0.2/32"
+      #     "fd42:44:44::2/128"
+      #   ];
+      # }
       {
-        # stardust peer
-        publicKey = "bexqvHQvQgAGEKMOAuhMkDowBe1cLEX1FBCKxdVoDgo=";
+        # home-network
+        publicKey = "W4+RVW+EUFaGhDMGN+VN2e/HxojGizhmHusmyKdC/Fw=";
         allowedIPs = [
           "10.44.0.2/32"
           "fd42:44:44::2/128"
         ];
       }
-      # {
-      #   # non-Nix home-network peer
-      #   publicKey = "REPLACE_WITH_HOME_PEER_PUBLIC_KEY";
-      #   allowedIPs = [
-      #     "10.44.0.3/32"
-      #     "fd42:44:44::3/128"
-      #     # Route your home LAN via this peer if needed.
-      #     "192.168.1.0/24"
-      #   ];
-      # }
     ];
   };
 
