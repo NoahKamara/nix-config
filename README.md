@@ -239,6 +239,22 @@ After reboot:
 ssh noah@chimaera.noahkamara.com
 ```
 
+#### Deploy updates (deploy-rs)
+
+Remote NixOS deployments are defined in `flake.nix` under `deploy.nodes`.
+
+Deploy a specific host:
+
+```bash
+nix run github:serokell/deploy-rs -- .#chimaera
+```
+
+Or use the helper script:
+
+```bash
+./deploy.sh chimaera
+```
+
 ---
 
 ## Development Shells

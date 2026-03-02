@@ -9,16 +9,22 @@
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
+    deploy-rs.url = "github:serokell/deploy-rs";
+    deploy-rs.inputs.nixpkgs.follows = "nixpkgs";
     lanzaboote.url = "github:nix-community/lanzaboote/v1.0.0";
     lanzaboote.inputs.nixpkgs.follows = "nixpkgs";
     comfyui-nix.url = "github:utensils/comfyui-nix/8b2a35890823c8529a25a57c4d9fdbd712aa3b38";
     comfyui-nix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nix-darwin, nixpkgs, home-manager, comfyui-nix, lanzaboote, ... } @ inputs:
+  outputs = { self, nix-darwin, nixpkgs, home-manager, deploy-rs, comfyui-nix, lanzaboote, ... } @ inputs:
   let
     systems = [ "x86_64-linux" "aarch64-darwin" ];
     forAllSystems = nixpkgs.lib.genAttrs systems;
+    nixosDeployHosts = [ "nebulon" "chimaera" "stardust" ];
+    deployHostnames = {
+      chimaera = "chimaera.noahkamara.com";
+    };
     userProfile = {
       username = "noah";
       fullName = "Noah Kamara";
@@ -147,5 +153,24 @@
           program = "${comfyServeWrapper}";
         };
       });
+
+    deploy.nodes =
+      nixpkgs.lib.genAttrs nixosDeployHosts
+        (host:
+          let
+            nixosConfig = self.nixosConfigurations.${host};
+            targetSystem = nixosConfig.pkgs.stdenv.hostPlatform.system;
+          in
+          {
+            hostname = deployHostnames.${host} or nixosConfig.config.networking.hostName;
+            sshUser = "root";
+
+            profiles.system = {
+              user = "root";
+              path = deploy-rs.lib.${targetSystem}.activate.nixos nixosConfig;
+            };
+          });
+
+    checks = builtins.mapAttrs (system: deployLib: deployLib.deployChecks self.deploy) deploy-rs.lib;
   };
 }
