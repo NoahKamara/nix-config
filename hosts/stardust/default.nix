@@ -39,6 +39,9 @@
     openFirewall = true;
   };
 
+  # Add authorized keys for root user
+  users.users.root.openssh.authorizedKeys.keys = authorizedKeys;
+
   programs.fish.enable = true;
 
   system.configurationRevision = self.rev or self.dirtyRev or null;
