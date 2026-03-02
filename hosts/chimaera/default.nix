@@ -54,14 +54,14 @@ in
           "fd42:44:44::2/128"
         ];
       }
-      # {
-      #   # hammerhead
-      #   publicKey = "";
-      #   allowedIPs = [
-      #     "10.44.0.3/32"
-      #     "fd42:44:44::3/128"
-      #   ];
-      # }
+      {
+        # hammerhead
+        publicKey = "hZfrGb9gDFAm0OyQgF1MauMCTw8btwXGQ9LsixQYWS8=";
+        allowedIPs = [
+          "10.44.0.3/32"
+          "fd42:44:44::3/128"
+        ];
+      }
     ];
   };
 

@@ -1,4 +1,4 @@
-{ self, inputs, pkgs, userProfile, ... }:
+{ self, inputs, lib, pkgs, userProfile, ... }:
 let
   wgInterface = "wg0";
   wgPrivateKeyFile = "/etc/wireguard/${wgInterface}.key";
@@ -44,7 +44,7 @@ in
   };
 
   # Keep the private key local on the machine and generate it once.
-  system.activationScripts.wireguardKeygen.text = ''
+  system.activationScripts.postActivation.text = lib.mkAfter ''
     set -eu
     /usr/bin/install -d -m 700 /etc/wireguard
     if [ ! -s "${wgPrivateKeyFile}" ]; then
