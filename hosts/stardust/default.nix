@@ -1,4 +1,8 @@
 { self, inputs, lib, pkgs, ... }:
+let
+  keys = import ../../modules/keys.nix;
+  authorizedKeys = builtins.attrValues keys;
+in
 {
   imports = [
     ../../modules/shared
