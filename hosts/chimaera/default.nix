@@ -38,14 +38,14 @@ in
     privateKeyFile = "/etc/wireguard/wg0.key";
 
     peers = [
-      # {
-      #   # stardust peer
-      #   publicKey = "";
-      #   allowedIPs = [
-      #     "10.44.0.2/32"
-      #     "fd42:44:44::2/128"
-      #   ];
-      # }
+      {
+        # stardust peer
+        publicKey = "";
+        allowedIPs = [
+          "10.44.0.2/32"
+          "fd42:44:44::2/128"
+        ];
+      }
       {
         # home-network
         publicKey = "W4+RVW+EUFaGhDMGN+VN2e/HxojGizhmHusmyKdC/Fw=";
@@ -81,13 +81,20 @@ in
     };
     script = ''
       set -eu
+      keyFile=/etc/wireguard/wg0.key
       install -d -m 700 /etc/wireguard
-      if [ ! -s /etc/wireguard/wg0.key ]; then
-        umask 077
-        wg genkey > /etc/wireguard/wg0.key
+      if [ -s "$keyFile" ]; then
+        chmod 600 "$keyFile"
+        chown root:root "$keyFile"
+        exit 0
       fi
-      chmod 600 /etc/wireguard/wg0.key
-      chown root:root /etc/wireguard/wg0.key
+
+      tmpKeyFile="$(mktemp /etc/wireguard/wg0.key.XXXXXX)"
+      umask 077
+      wg genkey > "$tmpKeyFile"
+      chmod 600 "$tmpKeyFile"
+      chown root:root "$tmpKeyFile"
+      mv -f "$tmpKeyFile" "$keyFile"
     '';
   };
 
