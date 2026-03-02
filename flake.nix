@@ -154,22 +154,26 @@
         };
       });
 
-    deploy.nodes =
-      nixpkgs.lib.genAttrs nixosDeployHosts
-        (host:
-          let
-            nixosConfig = self.nixosConfigurations.${host};
-            targetSystem = nixosConfig.pkgs.stdenv.hostPlatform.system;
-          in
-          {
-            hostname = deployHostnames.${host} or nixosConfig.config.networking.hostName;
-            sshUser = "root";
+    deploy = {
+      # Allow extra time for post-activation reconnect when network services restart.
+      confirmTimeout = 120;
+      nodes =
+        nixpkgs.lib.genAttrs nixosDeployHosts
+          (host:
+            let
+              nixosConfig = self.nixosConfigurations.${host};
+              targetSystem = nixosConfig.pkgs.stdenv.hostPlatform.system;
+            in
+            {
+              hostname = deployHostnames.${host} or nixosConfig.config.networking.hostName;
+              sshUser = "root";
 
-            profiles.system = {
-              user = "root";
-              path = deploy-rs.lib.${targetSystem}.activate.nixos nixosConfig;
-            };
-          });
+              profiles.system = {
+                user = "root";
+                path = deploy-rs.lib.${targetSystem}.activate.nixos nixosConfig;
+              };
+            });
+    };
 
     checks = builtins.mapAttrs (system: deployLib: deployLib.deployChecks self.deploy) deploy-rs.lib;
   };
