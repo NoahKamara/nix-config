@@ -132,14 +132,14 @@ in
     virtualHosts = {
       # Media Stack
       "jellyfin.chimaera.noahkamara.com".extraConfig = ''
-        reverse_proxy [fd42:44:44:0::2]:8096
+        reverse_proxy 10.44.0.2:8096
       '';
       "jellyseer.noahkamara.com".extraConfig = ''
-        reverse_proxy [fd42:44:44:0::2]:5055
+        reverse_proxy 10.44.0.2:5055
       '';
       # Home
       "home.noahkamara.com".extraConfig = ''
-        reverse_proxy [fd42:44:44:0::2]:8123
+        reverse_proxy 10.44.0.2:8123
       '';
     };
   };
