@@ -129,15 +129,19 @@ in
   services.caddy = {
     enable = true;
     email = "mail@noahkamara.com";
-    virtualHosts."jellyfin.chimaera.noahkamara.com".extraConfig = ''
-      reverse_proxy [fd42:44:44:0::2]:8096
-    '';
-    virtualHosts."jellyseerr.chimaera.noahkamara.com".extraConfig = ''
-      reverse_proxy [fd42:44:44:0::2]:5055
-    '';
-    virtualHosts."ha.chimaera.noahkamara.com".extraConfig = ''
-      reverse_proxy [fd42:44:44:0::2]:8123
-    '';
+    virtualHosts = {
+      # Media Stack
+      "jellyfin.chimaera.noahkamara.com".extraConfig = ''
+        reverse_proxy [fd42:44:44:0::2]:8096
+      '';
+      "jellyseer.noahkamara.com".extraConfig = ''
+        reverse_proxy [fd42:44:44:0::2]:5055
+      '';
+      # Home
+      "home.noahkamara.com".extraConfig = ''
+        reverse_proxy [fd42:44:44:0::2]:8123
+      '';
+    };
   };
 
   services.openssh = {
