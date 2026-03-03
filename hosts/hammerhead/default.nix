@@ -19,6 +19,9 @@ in
     inputs.home-manager.darwinModules.home-manager
   ];
 
+  home-manager.users.${userProfile.username}.imports = [
+    ../../modules/home/desktop.nix
+  ];
   programs.fish.enable = true;
   environment.shells = [ pkgs.fish ];
   system.primaryUser = userProfile.username;

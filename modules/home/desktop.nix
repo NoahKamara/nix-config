@@ -100,6 +100,24 @@ let
         ;;
     esac
   '';
+
+  settings = {
+    text = builtins.toJSON {
+      auto_update = false;
+      vim_mode = true;
+      vim = {
+        toggle_relative_line_numbers = true;
+      };
+      autosave = "on_focus_change";
+      auto_install_extensions = {
+        "docker-compose" = true;
+        "html" = true;
+        "nix" = true;
+        "dockerfile" = true;
+        "toml" = true;
+      };
+    };
+  };
 in
 {
   imports = [
@@ -134,19 +152,6 @@ in
   };
 
   # Zed
-  xdg.configFile."zed/settings.json".text = builtins.toJSON {
-    auto_update = false;
-    vim_mode = true;
-    vim = {
-      toggle_relative_line_numbers = true;
-    };
-    autosave = "on_focus_change";
-    auto_install_extensions = {
-      "docker-compose" = true;
-      "html" = true;
-      "nix" = true;
-      "dockerfile" = true;
-      "toml" = true;
-    };
-  };
+  xdg.configFile."zed/settings.json" = lib.mkIf pkgs.stdenv.isLinux settings;
+  home.file."Library/Application Support/Zed/settings.json" = lib.mkIf pkgs.stdenv.isDarwin settings;
 }

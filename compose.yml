@@ -1,0 +1,259 @@
+networks:
+  jellyfin-net:
+  netarr:
+  downloaders:
+services:
+  # Dashy is our dashboard
+  dashy:
+    image: lissy93/dashy
+    container_name: Dashy
+    volumes:
+      - ${CONFIG_DIRECTORY}/dashy/conf.yml:/app/user-data/conf.yml
+    ports:
+      - 1234:8080
+    # Set any environmental variables
+    environment:
+      - NODE_ENV=production
+      - UID=${PUID}
+      - GID=${PGID}
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'node', '/app/services/healthcheck']
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+  # jellyfin is used to serve your media to the client devices
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin
+    container_name: jellyfin
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - VERSION=docker
+      - JELLYFIN_PublishedServerUrl=192.168.178.111:8096
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${MEDIA_DIRECTORY}:/data
+      - ${CONFIG_DIRECTORY}/jellyfin:/config
+    # network_mode: host
+    networks:
+      - netarr
+    ports:
+      - 8096:8096/tcp
+      - 8920:8920/tcp
+      - 7359:7359/udp
+      - 1900:1900/udp
+    restart: unless-stopped
+    labels:
+      - "org.opencontainers.image.title=Jellyfin"
+      - "net.unraid.docker.icon=https://raw.githubusercontent.com/linuxserver/docker-templates/master/linuxserver.io/img/jellyfin-logo.png"
+      - "net.unraid.docker.webui=http://[IP]:[PORT:8096]"
+  # Gluetun is our VPN, so you can download torrents safely
+  gluetun:
+    image: qmcgaw/gluetun:v3
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - 8888:8888/tcp # HTTP proxy
+      - 8388:8388/tcp # Shadowsocks
+      - 8388:8388/udp # Shadowsocks
+      - 8003:8000/tcp # Admin
+      - 8081:8081/tcp # qBitTorrent
+      - 8080:8080/tcp # SABnzbd
+      #- 8080:8080/tcp # gluetun
+      #- 8081:8081/tcp # gluetun
+    networks:
+      downloaders:
+    environment:
+      - VPN_SERVICE_PROVIDER=${VPN_SERVICE}
+      - VPN_TYPE=${VPN_TYPE}
+      - OPENVPN_USER=${VPN_USER}
+      - OPENVPN_PASSWORD=${VPN_PASSWORD}
+      - WIREGUARD_PRIVATE_KEY=${VPN_PRIVATE_KEY}
+      - OPENVPN_CIPHERS=AES-256-GCM
+      - PORT_FORWARD_ONLY=off
+      - VPN_PORT_FORWARDING=off
+      - TIMEZONE=${TIMEZONE}
+    labels:
+      - "org.opencontainers.image.title=Gluetun"
+      - "net.unraid.docker.icon=https://github.com/qdm12/gluetun/blob/master/doc/logo_256.png"
+  # qBitorrent is used to download torrents
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent
+    container_name: qbittorrent
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - WEBUI_PORT=8081
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${MEDIA_DIRECTORY}:/data
+      - ${CONFIG_DIRECTORY}/qbittorrent:/config
+    restart: unless-stopped
+    # ports: # qbittorrent
+    # - 8081:8081 # qbittorrent
+    network_mode: "service:gluetun"
+    labels:
+      - "org.opencontainers.image.title=qBittorrent"
+      - "net.unraid.docker.icon=https://raw.githubusercontent.com/linuxserver/docker-templates/master/linuxserver.io/img/qbittorrent-logo.png"
+      - "net.unraid.docker.webui=http://[IP]:[PORT:8081]"
+  # SABnzbd is used to download from usenet
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=America/Montevideo
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${MEDIA_DIRECTORY}:/data
+      - ${CONFIG_DIRECTORY}/sabnzbd:/config
+    # ports: # sabnzbd
+    #   - 8080:8080 # sabnzbd
+    restart: unless-stopped
+    network_mode: "service:gluetun"
+    labels:
+      - "org.opencontainers.image.title=SABnzbd"
+      - "net.unraid.docker.icon=https://raw.githubusercontent.com/linuxserver/docker-templates/master/linuxserver.io/img/sabnzbd-logo.png"
+      - "net.unraid.docker.webui=http://[IP]:[PORT:8080]"
+  # Prowlarr is our torrent indexer/searcher. Sonarr/Radarr use Prowlarr as a source
+  # https://prowlarr.com/
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr
+    container_name: prowlarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${CONFIG_DIRECTORY}/prowlarr:/config
+    ports:
+      - 9696:9696
+    networks:
+      - netarr
+    restart: unless-stopped
+    labels:
+      - "org.opencontainers.image.title=Prowlarr"
+      - "net.unraid.docker.icon=https://raw.githubusercontent.com/linuxserver/docker-templates/master/linuxserver.io/img/prowlarr-logo.png"
+      - "net.unraid.docker.webui=http://[IP]:[PORT:9696]"
+  # Sync TRaSH Guides + custom configs with Sonarr/Radarr 
+  configarr:
+    image: ghcr.io/raydak-labs/configarr:latest
+    container_name: configarr
+    user: $PUID:$PGID # Optional, defaults to root:root
+    environment:
+      - TZ=${TIMEZONE}
+      - LOG_STACKTRACE=true
+    volumes:
+      - ${CONFIG_DIRECTORY}/configarr/config:/app/config
+      - ${CONFIG_DIRECTORY}/configarr/dockerrepos:/app/repos
+      - ${CONFIG_DIRECTORY}/configarr/custom/cfs:/app/cfs
+      - ${CONFIG_DIRECTORY}/configarr/custom/templates:/app/templates
+    restart: "no" # optional make sure this is set to no or removed. Default is no
+    networks:
+      - netarr
+    depends_on:
+      sonarr:
+        condition: service_healthy
+      radarr:
+        condition: service_healthy
+    labels:
+      - "org.opencontainers.image.title=Configarr"
+      - "net.unraid.docker.icon=https://configarr.raydak.de/img/logo.svg"
+      - "net.unraid.docker.webui=http://[IP]:[PORT:80]"
+  # Sonarr is used to query, add downloads to the download queue and index TV shows
+  # https://sonarr.tv/
+  sonarr:
+    image: lscr.io/linuxserver/sonarr
+    container_name: sonarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${MEDIA_DIRECTORY}:/data
+      - ${CONFIG_DIRECTORY}/sonarr:/config
+    networks:
+      - netarr
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8989/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    labels:
+      - "org.opencontainers.image.title=Sonarr"
+      - "net.unraid.docker.icon=https://raw.githubusercontent.com/linuxserver/docker-templates/master/linuxserver.io/img/sonarr-logo.png"
+      - "net.unraid.docker.webui=http://[IP]:[PORT:8989]"
+  # Radarr is used to query, add downloads to the download queue and index Movies
+  # https://radarr.video/
+  radarr:
+    image: lscr.io/linuxserver/radarr
+    container_name: radarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${MEDIA_DIRECTORY}:/data
+      - ${CONFIG_DIRECTORY}/radarr:/config
+    networks:
+      - netarr
+    ports:
+      - 7878:7878
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7878/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    labels:
+      - "org.opencontainers.image.title=Radarr"
+      - "net.unraid.docker.icon=https://raw.githubusercontent.com/linuxserver/docker-templates/master/linuxserver.io/img/radarr-logo.png"
+      - "net.unraid.docker.webui=http://[IP]:[PORT:7878]"
+  # Bazarr is used to download and categorize subtitles
+  # https://www.bazarr.media/
+  bazarr:
+    image: lscr.io/linuxserver/bazarr
+    container_name: bazarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${MEDIA_DIRECTORY}:/data
+      - ${CONFIG_DIRECTORY}/bazarr:/config
+    networks:
+      - netarr
+    ports:
+      - 6767:6767
+    restart: unless-stopped
+    labels:
+      - "org.opencontainers.image.title=Bazarr"
+      - "net.unraid.docker.icon=https://raw.githubusercontent.com/linuxserver/docker-templates/master/linuxserver.io/img/bazarr-logo.png"
+      - "net.unraid.docker.webui=http://[IP]:[PORT:6767]"
+  jellyseerr:
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    environment:
+      - LOG_LEVEL=debug
+      - TZ=${TIMEZONE}
+      - PORT=5055 #optional
+    ports:
+      - 5055:5055
+    networks:
+      - netarr
+    volumes:
+      - ${CONFIG_DIRECTORY}/jellyseerr:/app/config
+    restart: unless-stopped
+    labels:
+      - "org.opencontainers.image.title=Jellyseerr"
+      - "net.unraid.docker.icon=https://raw.githubusercontent.com/fallenbagel/jellyseerr/develop/public/os_logo_square.png"
+      - "net.unraid.docker.webui=http://[IP]:[PORT:5055]"
