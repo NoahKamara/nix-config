@@ -1,4 +1,10 @@
-{ inputs, lib, pkgs, config, ... }:
+{
+  inputs,
+  lib,
+  pkgs,
+  config,
+  ...
+}:
 {
   imports = [
     ../../modules/shared
@@ -8,7 +14,9 @@
     ../../modules/user
     inputs.home-manager.nixosModules.home-manager
     inputs.lanzaboote.nixosModules.lanzaboote
-  ] ++ lib.optional (builtins.pathExists ./hardware-configuration.nix) ./hardware-configuration.nix ++ [
+  ]
+  ++ lib.optional (builtins.pathExists ./hardware-configuration.nix) ./hardware-configuration.nix
+  ++ [
     inputs.disko.nixosModules.disko
     ./disko.nix
   ];
@@ -32,7 +40,10 @@
       Type = "oneshot";
       RemainAfterExit = true;
     };
-    path = [ pkgs.util-linux pkgs.rsync ];
+    path = [
+      pkgs.util-linux
+      pkgs.rsync
+    ];
     script = ''
       esp_source=$(findmnt -n -o SOURCE /boot)
       tmpdir=$(mktemp -d)
@@ -111,7 +122,10 @@
     wayvnc
   ];
 
-  networking.firewall.allowedTCPPorts = [ 5900 8188 ];
+  networking.firewall.allowedTCPPorts = [
+    5900
+    8188
+  ];
 
   systemd.user.services.wayvnc = {
     description = "WayVNC server";

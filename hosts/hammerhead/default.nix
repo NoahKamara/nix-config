@@ -1,4 +1,10 @@
-{ inputs, lib, pkgs, userProfile, ... }:
+{
+  inputs,
+  lib,
+  pkgs,
+  userProfile,
+  ...
+}:
 let
   wgInterface = "wg0";
   wgPrivateKeyFile = "/etc/wireguard/${wgInterface}.key";

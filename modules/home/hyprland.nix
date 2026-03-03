@@ -205,9 +205,18 @@ lib.mkIf pkgs.stdenv.isLinux {
       height = 34;
       spacing = 8;
 
-      modules-left = [ "hyprland/workspaces" "hyprland/window" ];
+      modules-left = [
+        "hyprland/workspaces"
+        "hyprland/window"
+      ];
       modules-center = [ "clock" ];
-      modules-right = [ "pulseaudio" "network" "cpu" "memory" "tray" ];
+      modules-right = [
+        "pulseaudio"
+        "network"
+        "cpu"
+        "memory"
+        "tray"
+      ];
 
       "hyprland/workspaces" = {
         format = "{name}";
@@ -237,7 +246,11 @@ lib.mkIf pkgs.stdenv.isLinux {
       pulseaudio = {
         format = "{icon} {volume}%";
         format-muted = "󰝟 muted";
-        format-icons.default = [ "" "" "" ];
+        format-icons.default = [
+          ""
+          ""
+          ""
+        ];
         on-click = "pavucontrol";
       };
 

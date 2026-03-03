@@ -1,4 +1,10 @@
-{ pkgs, lib, inputs, userProfile, ... }:
+{
+  pkgs,
+  lib,
+  inputs,
+  userProfile,
+  ...
+}:
 let
   vaultDiskoConfig = pkgs.writeText "vault-disko.nix" ''
     { imagePath, mountPoint, mapperName ? "vaultimg", ... }:
@@ -105,35 +111,41 @@ in
 
   home.stateVersion = "24.11";
 
-  home.packages = with pkgs; [
-    ripgrep
-    fd
-    tree
-    lazygit
-    zed-editor
-    (writeShellScriptBin "use-nix" ''
-      config_path="''${NIX_CONFIG_DIR:-$HOME/.nix-config}"
-      shell_name="''${1:-default}"
+  home.packages =
+    with pkgs;
+    [
+      ripgrep
+      fd
+      tree
+      lazygit
+      zed-editor
+      (writeShellScriptBin "use-nix" ''
+        config_path="''${NIX_CONFIG_DIR:-$HOME/.nix-config}"
+        shell_name="''${1:-default}"
 
-      if [ "$shell_name" = "default" ]; then
-        echo "use flake \"$config_path\"" > .envrc
-      else
-        echo "use flake \"$config_path#$shell_name\"" > .envrc
-      fi
+        if [ "$shell_name" = "default" ]; then
+          echo "use flake \"$config_path\"" > .envrc
+        else
+          echo "use flake \"$config_path#$shell_name\"" > .envrc
+        fi
 
-      direnv allow
-    '')
-    (import ../../pkgs/service-expose.nix { inherit pkgs; })
-  ] ++ lib.optionals pkgs.stdenv.isLinux (with pkgs; [
-    wofi
-    wl-clipboard
-    grim
-    slurp
-    brightnessctl
-    playerctl
-    pavucontrol
-    vaultCommand
-  ]);
+        direnv allow
+      '')
+      (import ../../pkgs/service-expose.nix { inherit pkgs; })
+    ]
+    ++ lib.optionals pkgs.stdenv.isLinux (
+      with pkgs;
+      [
+        wofi
+        wl-clipboard
+        grim
+        slurp
+        brightnessctl
+        playerctl
+        pavucontrol
+        vaultCommand
+      ]
+    );
 
   programs.home-manager.enable = true;
 
@@ -193,7 +205,7 @@ in
     auto_update = false;
     vim_mode = true;
     vim = {
-        toggle_relative_line_numbers = true;
+      toggle_relative_line_numbers = true;
     };
   };
 }

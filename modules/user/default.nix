@@ -1,24 +1,31 @@
-{ pkgs, lib, inputs, userProfile, ... }:
+{
+  pkgs,
+  lib,
+  inputs,
+  userProfile,
+  ...
+}:
 let
   username = userProfile.username;
-  homeDirectory =
-    if pkgs.stdenv.isDarwin then "/Users/${username}" else "/home/${username}";
+  homeDirectory = if pkgs.stdenv.isDarwin then "/Users/${username}" else "/home/${username}";
   keys = import ../keys.nix;
   authorizedKeys = builtins.attrValues keys;
 in
 {
-  users.users.${username} =
-    {
-      name = username;
-      home = homeDirectory;
-      shell = pkgs.fish;
-    }
-    // lib.optionalAttrs pkgs.stdenv.isLinux {
-      isNormalUser = true;
-      extraGroups = [ "wheel" "networkmanager" ];
-      linger = true;
-      openssh.authorizedKeys.keys = authorizedKeys;
-    };
+  users.users.${username} = {
+    name = username;
+    home = homeDirectory;
+    shell = pkgs.fish;
+  }
+  // lib.optionalAttrs pkgs.stdenv.isLinux {
+    isNormalUser = true;
+    extraGroups = [
+      "wheel"
+      "networkmanager"
+    ];
+    linger = true;
+    openssh.authorizedKeys.keys = authorizedKeys;
+  };
 
   programs.fish.enable = lib.mkIf pkgs.stdenv.isLinux true;
 

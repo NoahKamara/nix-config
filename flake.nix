@@ -50,8 +50,9 @@
           hooks.nix-fmt = {
             enable = true;
             name = "nix fmt";
-            entry = "${pkgs.nix}/bin/nix fmt";
-            pass_filenames = false;
+            entry = "${pkgs.nixfmt}/bin/nixfmt";
+            files = "\\.nix$";
+            pass_filenames = true;
           };
         }
       );
@@ -205,6 +206,17 @@
             program = "${comfyServeWrapper}";
           };
         }
+      );
+
+      formatter = forAllSystems (
+        system:
+        let
+          pkgs = import nixpkgs {
+            inherit system;
+            config.allowUnfree = true;
+          };
+        in
+        pkgs.nixfmt
       );
 
       deploy = {

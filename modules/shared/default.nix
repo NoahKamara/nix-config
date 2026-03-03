@@ -1,4 +1,9 @@
-{ self, pkgs, inputs, ... }:
+{
+  self,
+  pkgs,
+  inputs,
+  ...
+}:
 
 {
   system.configurationRevision = self.rev or self.dirtyRev or null;
@@ -8,7 +13,10 @@
   ];
 
   nix.settings = {
-    experimental-features = [ "nix-command" "flakes" ];
+    experimental-features = [
+      "nix-command"
+      "flakes"
+    ];
     substituters = [
       "https://cache.nixos.org"
       "https://comfyui.cachix.org"

@@ -6,7 +6,6 @@
     extest.enable = true;
   };
 
-
   environment.systemPackages = with pkgs; [
     discord
   ];

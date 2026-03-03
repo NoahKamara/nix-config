@@ -1,11 +1,18 @@
-{ inputs, lib, pkgs, ... }:
+{
+  inputs,
+  lib,
+  pkgs,
+  ...
+}:
 {
   imports = [
     ../../modules/shared
     ../../modules/nixos
     ../../modules/user
     inputs.home-manager.nixosModules.home-manager
-  ] ++ lib.optional (builtins.pathExists ./hardware-configuration.nix) ./hardware-configuration.nix ++ [
+  ]
+  ++ lib.optional (builtins.pathExists ./hardware-configuration.nix) ./hardware-configuration.nix
+  ++ [
     inputs.disko.nixosModules.disko
     ./disko.nix
   ];
