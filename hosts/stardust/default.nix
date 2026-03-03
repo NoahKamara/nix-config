@@ -1,8 +1,4 @@
-{ self, inputs, lib, pkgs, authorizedKeys, ... }:
-let
-  keys = import ../../modules/keys.nix;
-  authorizedKeys = builtins.attrValues keys;
-in
+{ self, inputs, lib, pkgs, ... }:
 {
   imports = [
     ../../modules/shared
@@ -19,12 +15,6 @@ in
 
   services.qemuGuest.enable = true;
 
-  # Required when Home Manager user packages provide xdg portal files.
-  environment.pathsToLink = [
-    "/share/applications"
-    "/share/xdg-desktop-portal"
-  ];
-
   boot.loader.grub = {
     enable = true;
     devices = [ "/dev/vda" ];
@@ -32,19 +22,6 @@ in
     efiInstallAsRemovable = true;
   };
   boot.loader.efi.canTouchEfiVariables = false;
-
-  services.openssh = {
-    enable = true;
-    settings = {
-      PasswordAuthentication = false;
-      KbdInteractiveAuthentication = false;
-      PermitRootLogin = "no";
-    };
-    openFirewall = true;
-  };
-
-  # Add authorized keys for root user
-  users.users.root.openssh.authorizedKeys.keys = authorizedKeys;
 
   programs.fish.enable = true;
 

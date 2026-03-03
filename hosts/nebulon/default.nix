@@ -107,16 +107,6 @@
 
   nixpkgs.hostPlatform = "x86_64-linux";
 
-  services.openssh = {
-    enable = true;
-    settings = {
-      PasswordAuthentication = false;
-      KbdInteractiveAuthentication = false;
-      PermitRootLogin = "no";
-    };
-    openFirewall = true;
-  };
-
   environment.systemPackages = with pkgs; [
     sbctl
     wayvnc

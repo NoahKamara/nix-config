@@ -5,10 +5,6 @@
   pkgs,
   ...
 }:
-let
-  keys = import ../../modules/keys.nix;
-  authorizedKeys = builtins.attrValues keys;
-in
 {
   imports = [
     ../../modules/shared
@@ -144,17 +140,6 @@ in
     };
   };
 
-  services.openssh = {
-    enable = true;
-    settings = {
-      PasswordAuthentication = false;
-      KbdInteractiveAuthentication = false;
-      PermitRootLogin = "prohibit-password";
-    };
-    openFirewall = true;
-  };
-
-  users.users.root.openssh.authorizedKeys.keys = authorizedKeys;
   boot.loader.grub = {
     enable = true;
     devices = [ "/dev/sda" ];
