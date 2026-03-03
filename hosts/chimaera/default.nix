@@ -134,7 +134,7 @@
       '';
       # Home
       "home.noahkamara.com".extraConfig = ''
-        reverse_proxy 10.44.0.2:8123
+        reverse_proxy 192.168.178.71:8123
       '';
     };
   };
