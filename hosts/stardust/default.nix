@@ -23,8 +23,6 @@
   };
   boot.loader.efi.canTouchEfiVariables = false;
 
-  programs.fish.enable = true;
-
   system.configurationRevision = self.rev or self.dirtyRev or null;
   system.stateVersion = "24.11";
 
