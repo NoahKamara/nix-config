@@ -106,7 +106,6 @@ in
 {
   imports = [
     ./ghostty.nix
-    ./hyprland.nix
   ];
 
   home.stateVersion = "24.11";

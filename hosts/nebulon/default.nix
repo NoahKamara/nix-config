@@ -3,6 +3,7 @@
   lib,
   pkgs,
   config,
+  userProfile,
   ...
 }:
 {
@@ -113,40 +114,20 @@
     extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
   };
 
+  home-manager.users.${userProfile.username}.imports = [
+    ../../modules/home/desktop.nix
+  ];
+
   system.stateVersion = "24.11";
 
   nixpkgs.hostPlatform = "x86_64-linux";
 
   environment.systemPackages = with pkgs; [
     sbctl
-    wayvnc
   ];
 
   networking.firewall.allowedTCPPorts = [
     5900
     8188
   ];
-
-  systemd.user.services.wayvnc = {
-    description = "WayVNC server";
-    wantedBy = [ "default.target" ];
-    serviceConfig = {
-      ExecStart = pkgs.writeShellScript "start-wayvnc" ''
-        set -eu
-
-        runtime_dir="/run/user/$(id -u)"
-        while true; do
-          socket="$(ls "$runtime_dir"/wayland-* 2>/dev/null | head -n1 || true)"
-          if [ -n "$socket" ]; then
-            wayland_display="$(basename "$socket")"
-            exec ${pkgs.wayvnc}/bin/wayvnc 0.0.0.0 5900 --socket "$wayland_display"
-          fi
-          sleep 2
-        done
-      '';
-      Restart = "on-failure";
-      RestartSec = 2;
-    };
-  };
-
 }
