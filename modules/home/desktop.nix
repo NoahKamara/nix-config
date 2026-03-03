@@ -140,5 +140,13 @@ in
     vim = {
       toggle_relative_line_numbers = true;
     };
+    autosave = "on_focus_change";
+    auto_install_extensions = {
+      "docker-compose" = true;
+      "html" = true;
+      "nix" = true;
+      "dockerfile" = true;
+      "toml" = true;
+    };
   };
 }
