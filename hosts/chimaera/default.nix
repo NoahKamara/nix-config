@@ -118,8 +118,22 @@
   systemd.network.enable = true;
   systemd.network.networks."10-uplink" = {
     matchConfig.Name = "en*";
-    networkConfig.DHCP = "yes";
+    networkConfig = {
+      DHCP = "ipv4";
+      IPv6AcceptRA = false;
+    };
+    addresses = [
+      { addressConfig.Address = "2a01:4f8:1c19:f643::1/64"; }
+    ];
+    routes = [
+      { routeConfig.Gateway = "fe80::1"; }
+    ];
   };
+
+  networking.nameservers = [
+    "2a01:4ff:ff00::add:1"
+    "2a01:4ff:ff00::add:2"
+  ];
 
   services.caddy = {
     enable = true;
