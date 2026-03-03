@@ -1,4 +1,4 @@
-{ self, inputs, lib, pkgs, userProfile, ... }:
+{ inputs, lib, pkgs, userProfile, ... }:
 let
   wgInterface = "wg0";
   wgPrivateKeyFile = "/etc/wireguard/${wgInterface}.key";
@@ -55,7 +55,6 @@ in
     /usr/sbin/chown root:wheel "${wgPrivateKeyFile}"
   '';
 
-  system.configurationRevision = self.rev or self.dirtyRev or null;
   system.stateVersion = 6;
 
   nixpkgs.hostPlatform = "aarch64-darwin";

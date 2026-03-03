@@ -1,4 +1,4 @@
-{ self, inputs, lib, pkgs, config, ... }:
+{ inputs, lib, pkgs, config, ... }:
 {
   imports = [
     ../../modules/shared
@@ -102,7 +102,6 @@
     extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
   };
 
-  system.configurationRevision = self.rev or self.dirtyRev or null;
   system.stateVersion = "24.11";
 
   nixpkgs.hostPlatform = "x86_64-linux";

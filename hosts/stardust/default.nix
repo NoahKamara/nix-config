@@ -1,4 +1,4 @@
-{ self, inputs, lib, pkgs, ... }:
+{ inputs, lib, pkgs, ... }:
 {
   imports = [
     ../../modules/shared
@@ -23,7 +23,6 @@
   };
   boot.loader.efi.canTouchEfiVariables = false;
 
-  system.configurationRevision = self.rev or self.dirtyRev or null;
   system.stateVersion = "24.11";
 
   nixpkgs.hostPlatform = "x86_64-linux";

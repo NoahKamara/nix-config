@@ -1,5 +1,4 @@
 {
-  self,
   inputs,
   lib,
   pkgs,
@@ -150,7 +149,6 @@
 
   services.qemuGuest.enable = true;
 
-  system.configurationRevision = self.rev or self.dirtyRev or null;
   system.stateVersion = "24.11";
   nixpkgs.hostPlatform = "x86_64-linux";
 }

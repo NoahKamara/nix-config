@@ -1,6 +1,7 @@
-{ pkgs, inputs, ... }:
+{ self, pkgs, inputs, ... }:
 
 {
+  system.configurationRevision = self.rev or self.dirtyRev or null;
   environment.systemPackages = with pkgs; [
     vim
     curl
