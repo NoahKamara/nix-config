@@ -47,6 +47,7 @@
       "10.44.0.1/24"
       "fd42:44:44::1/64"
     ];
+    mtu = 1380;
     listenPort = 51820;
     privateKeyFile = "/etc/wireguard/wg0.key";
 
@@ -140,7 +141,7 @@
     email = "mail@noahkamara.com";
     virtualHosts = {
       # Media Stack
-      "jellyfin.chimaera.noahkamara.com".extraConfig = ''
+      "jellyfin.noahkamara.com".extraConfig = ''
         reverse_proxy 10.44.0.2:8096
       '';
       "jellyseer.noahkamara.com".extraConfig = ''
