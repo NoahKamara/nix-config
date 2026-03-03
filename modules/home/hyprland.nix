@@ -97,7 +97,7 @@ lib.mkIf pkgs.stdenv.isLinux {
 
       cursor = {
         # Keep cursor visible longer to avoid rapid hide/show blinking on small moves.
-        inactive_timeout = 30;
+        inactive_timeout = 5;
       };
 
       bind = [
@@ -166,7 +166,7 @@ lib.mkIf pkgs.stdenv.isLinux {
       ];
 
       binde = [
-        # Resize with mod + arrow keys
+        # Resize with mod + vim motions
         "$mod CTRL, H, resizeactive, -20 0"
         "$mod CTRL, L, resizeactive, 20 0"
         "$mod CTRL, K, resizeactive, 0 -20"
@@ -203,7 +203,7 @@ lib.mkIf pkgs.stdenv.isLinux {
       layer = "top";
       position = "top";
       height = 34;
-      spacing = 8;
+      spacing = 4;
 
       modules-left = [
         "hyprland/workspaces"
@@ -234,23 +234,27 @@ lib.mkIf pkgs.stdenv.isLinux {
       };
 
       cpu = {
-        format = " CPU {usage}%";
+        format = " CPU {usage}%";
         interval = 3;
       };
 
       memory = {
-        format = "󰘚 RAM {percentage}%";
+        format = " RAM {percentage}%";
         interval = 3;
       };
 
       pulseaudio = {
         format = "{icon} {volume}%";
-        format-muted = "󰝟 muted";
-        format-icons.default = [
-          ""
-          ""
-          ""
-        ];
+        format-muted = " muted";
+        format-icons = {
+          default = [
+            ""
+            ""
+            ""
+          ];
+          "alsa_output.usb-SteelSeries_Arctis_Nova_Pro_Wireless-00.analog-stereo" = "󰋋";
+          "alsa_output.pci-0000_26_00.1.hdmi-stereo" = "󰓃";
+        };
         on-click = "pavucontrol";
       };
 
@@ -262,7 +266,7 @@ lib.mkIf pkgs.stdenv.isLinux {
       };
 
       tray = {
-        spacing = 8;
+        spacing = 4;
       };
     };
 
