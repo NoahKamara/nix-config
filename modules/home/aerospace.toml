@@ -73,7 +73,6 @@ run = ['move-node-to-workspace S']
 [mode.main.binding]
 alt-p = "mode project"   # Project selector
 alt-shift-semicolon = 'mode service' # Service mode
-esc   = "mode main"      # Exit project selector
 
 # Open Terminal https://nikitabobko.github.io/AeroSpace/commands#exec-and-forget
 alt-enter = '''exec-and-forget osascript -e '
