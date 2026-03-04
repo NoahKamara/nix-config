@@ -71,7 +71,7 @@ run = ['move-node-to-workspace S']
 
 
 [mode.main.binding]
-alt-p = "mode project"   # Project selector
+alt-esc = "mode project"   # Project selector
 alt-shift-semicolon = 'mode service' # Service mode
 
 # Open Terminal https://nikitabobko.github.io/AeroSpace/commands#exec-and-forget
