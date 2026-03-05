@@ -139,6 +139,7 @@ in
         playerctl
         pavucontrol
         vaultCommand
+        firefox
       ]
     );
 
