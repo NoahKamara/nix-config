@@ -16,10 +16,15 @@ lib.mkIf pkgs.stdenv.isLinux {
 
       runtime_dir="/run/user/$(id -u)"
       while true; do
-        socket="$(ls "$runtime_dir"/wayland-* 2>/dev/null | head -n1 || true)"
+        # Prefer the most recently created Wayland socket to avoid stale/older sessions.
+        socket="$(
+          find "$runtime_dir" -maxdepth 1 -type s -name 'wayland-*' 2>/dev/null \
+            | sort -V \
+            | tail -n1 || true
+        )"
         if [ -n "$socket" ]; then
           wayland_display="$(basename "$socket")"
-          exec ${pkgs.wayvnc}/bin/wayvnc --gpu --socket "$wayland_display"
+          exec ${pkgs.wayvnc}/bin/wayvnc --socket "$wayland_display"
         fi
         sleep 2
       done
