@@ -16,16 +16,21 @@ lib.mkIf pkgs.stdenv.isLinux {
 
       runtime_dir="/run/user/$(id -u)"
       while true; do
-        # Prefer the most recently created Wayland socket to avoid stale/older sessions.
-        socket="$(
-          find "$runtime_dir" -maxdepth 1 -type s -name 'wayland-*' 2>/dev/null \
-            | sort -V \
-            | tail -n1 || true
-        )"
-        if [ -n "$socket" ]; then
+        for socket in "$runtime_dir"/wayland-*; do
+          [ -S "$socket" ] || continue
           wayland_display="$(basename "$socket")"
-          exec ${pkgs.wayvnc}/bin/wayvnc --socket "$wayland_display"
-        fi
+
+          # Only attach once this socket responds like a live Hyprland session.
+          if ! WAYLAND_DISPLAY="$wayland_display" XDG_RUNTIME_DIR="$runtime_dir" \
+            ${pkgs.hyprland}/bin/hyprctl monitors all >/dev/null 2>&1; then
+            continue
+          fi
+
+          exec env \
+            WAYLAND_DISPLAY="$wayland_display" \
+            XDG_RUNTIME_DIR="$runtime_dir" \
+            ${pkgs.wayvnc}/bin/wayvnc --disable-input 127.0.0.1 5900
+        done
         sleep 2
       done
     '')
