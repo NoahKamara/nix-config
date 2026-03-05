@@ -16,33 +16,13 @@ lib.mkIf pkgs.stdenv.isLinux {
 
       runtime_dir="/run/user/$(id -u)"
       while true; do
-        for socket in "$runtime_dir"/wayland-*; do
-          [ -S "$socket" ] || continue
-          wayland_display="$(basename "$socket")"
-
-          output="$(
-            WAYLAND_DISPLAY="$wayland_display" XDG_RUNTIME_DIR="$runtime_dir" \
-              ${pkgs.hyprland}/bin/hyprctl -j monitors all \
-              | ${pkgs.jq}/bin/jq -r '
-                [ .[]
-                  | select((.disabled // false | not) and ((.width // 0) > 0) and ((.height // 0) > 0))
-                ] as $active
-                | (([$active[] | select(.focused == true)] + $active)[0].name // empty)
-              '
-          )" || true
-
-          if [ -n "$output" ]; then
-            echo "wayvnc: WAYLAND_DISPLAY=$wayland_display output=$output"
-            exec env \
-              WAYLAND_DISPLAY="$wayland_display" \
-              XDG_RUNTIME_DIR="$runtime_dir" \
-              ${pkgs.wayvnc}/bin/wayvnc \
-              --disable-input \
-              --disable-resizing \
-              --output "$output" \
-              127.0.0.1 5900
-          fi
-
+        wayland_display="$(
+          find "$runtime_dir" -maxdepth 1 -type s -name 'wayland-*' 2>/dev/null \
+            | sort -V \
+            | tail -n1 \
+            | sed 's#.*/##'
+        )"
+        if [ -n "$wayland_display" ]; then
           echo "wayvnc: WAYLAND_DISPLAY=$wayland_display output=auto"
           exec env \
             WAYLAND_DISPLAY="$wayland_display" \
@@ -51,7 +31,7 @@ lib.mkIf pkgs.stdenv.isLinux {
             --disable-input \
             --disable-resizing \
             127.0.0.1 5900
-        done
+        fi
         sleep 2
       done
     '')
