@@ -20,12 +20,6 @@ lib.mkIf pkgs.stdenv.isLinux {
           [ -S "$socket" ] || continue
           wayland_display="$(basename "$socket")"
 
-          # Only attach once this socket responds like a live Hyprland session.
-          if ! WAYLAND_DISPLAY="$wayland_display" XDG_RUNTIME_DIR="$runtime_dir" \
-            ${pkgs.hyprland}/bin/hyprctl -j monitors all >/dev/null 2>&1; then
-            continue
-          fi
-
           output="$(
             WAYLAND_DISPLAY="$wayland_display" XDG_RUNTIME_DIR="$runtime_dir" \
               ${pkgs.hyprland}/bin/hyprctl -j monitors all \
@@ -35,17 +29,27 @@ lib.mkIf pkgs.stdenv.isLinux {
                 ] as $active
                 | (([$active[] | select(.focused == true)] + $active)[0].name // empty)
               '
-          )"
-          [ -n "$output" ] || continue
+          )" || true
 
-          echo "wayvnc: WAYLAND_DISPLAY=$wayland_display output=$output"
+          if [ -n "$output" ]; then
+            echo "wayvnc: WAYLAND_DISPLAY=$wayland_display output=$output"
+            exec env \
+              WAYLAND_DISPLAY="$wayland_display" \
+              XDG_RUNTIME_DIR="$runtime_dir" \
+              ${pkgs.wayvnc}/bin/wayvnc \
+              --disable-input \
+              --disable-resizing \
+              --output "$output" \
+              127.0.0.1 5900
+          fi
+
+          echo "wayvnc: WAYLAND_DISPLAY=$wayland_display output=auto"
           exec env \
             WAYLAND_DISPLAY="$wayland_display" \
             XDG_RUNTIME_DIR="$runtime_dir" \
             ${pkgs.wayvnc}/bin/wayvnc \
             --disable-input \
             --disable-resizing \
-            --output "$output" \
             127.0.0.1 5900
         done
         sleep 2
