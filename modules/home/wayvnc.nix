@@ -22,14 +22,31 @@ lib.mkIf pkgs.stdenv.isLinux {
 
           # Only attach once this socket responds like a live Hyprland session.
           if ! WAYLAND_DISPLAY="$wayland_display" XDG_RUNTIME_DIR="$runtime_dir" \
-            ${pkgs.hyprland}/bin/hyprctl monitors all >/dev/null 2>&1; then
+            ${pkgs.hyprland}/bin/hyprctl -j monitors all >/dev/null 2>&1; then
             continue
           fi
 
+          output="$(
+            WAYLAND_DISPLAY="$wayland_display" XDG_RUNTIME_DIR="$runtime_dir" \
+              ${pkgs.hyprland}/bin/hyprctl -j monitors all \
+              | ${pkgs.jq}/bin/jq -r '
+                [ .[]
+                  | select((.disabled // false | not) and ((.width // 0) > 0) and ((.height // 0) > 0))
+                ] as $active
+                | (([$active[] | select(.focused == true)] + $active)[0].name // empty)
+              '
+          )"
+          [ -n "$output" ] || continue
+
+          echo "wayvnc: WAYLAND_DISPLAY=$wayland_display output=$output"
           exec env \
             WAYLAND_DISPLAY="$wayland_display" \
             XDG_RUNTIME_DIR="$runtime_dir" \
-            ${pkgs.wayvnc}/bin/wayvnc --disable-input 127.0.0.1 5900
+            ${pkgs.wayvnc}/bin/wayvnc \
+            --disable-input \
+            --disable-resizing \
+            --output "$output" \
+            127.0.0.1 5900
         done
         sleep 2
       done
