@@ -1,4 +1,9 @@
-{ pkgs, lib, ... }:
+{
+  pkgs,
+  lib,
+  config,
+  ...
+}:
 
 let
   wofiToggle = pkgs.writeShellScriptBin "wofi-toggle" ''
@@ -195,6 +200,42 @@ lib.mkIf pkgs.stdenv.isLinux {
     }
   '';
 
+  xdg.configFile."waybar/power-menu.xml".text = ''
+    <?xml version="1.0" encoding="UTF-8"?>
+    <interface>
+      <object class="GtkMenu" id="menu">
+        <child>
+          <object class="GtkMenuItem" id="lock">
+            <property name="label">Lock</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkMenuItem" id="logout">
+            <property name="label">Logout</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkSeparatorMenuItem" id="sep-1"/>
+        </child>
+        <child>
+          <object class="GtkMenuItem" id="suspend">
+            <property name="label">Suspend</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkMenuItem" id="reboot">
+            <property name="label">Reboot</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkMenuItem" id="poweroff">
+            <property name="label">Power Off</property>
+          </object>
+        </child>
+      </object>
+    </interface>
+  '';
+
   # ── Waybar ──────────────────────────────────────────────────────────
   programs.waybar = {
     enable = true;
@@ -217,7 +258,22 @@ lib.mkIf pkgs.stdenv.isLinux {
         "memory"
         "gamemode"
         "tray"
+        "custom/power"
       ];
+
+      "custom/power" = {
+        format = "⏻";
+        tooltip = false;
+        menu = "on-click";
+        menu-file = "${config.xdg.configHome}/waybar/power-menu.xml";
+        menu-actions = [
+          "loginctl lock-session"
+          "hyprctl dispatch exit"
+          "systemctl suspend"
+          "systemctl reboot"
+          "systemctl poweroff"
+        ];
+      };
 
       "hyprland/workspaces" = {
         format = "{name}";
@@ -318,8 +374,13 @@ lib.mkIf pkgs.stdenv.isLinux {
         color: #d8dee9;
       }
 
-      #cpu, #memory, #pulseaudio, #network, #tray {
+      #custom-power, #cpu, #memory, #pulseaudio, #network, #tray {
         padding: 0 10px;
+      }
+
+      #custom-power {
+        color: #bf616a;
+        font-size: 16px;
       }
 
       #cpu { color: #ebcb8b; }
