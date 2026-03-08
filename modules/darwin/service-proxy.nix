@@ -1,8 +1,8 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 let
   caddyConfig = import ../shared/service-proxy-caddy-config.nix { inherit pkgs; };
 in
-{
+lib.mkIf pkgs.stdenv.isDarwin {
   launchd.daemons.service-proxy = {
     serviceConfig = {
       Label = "local.service-proxy";

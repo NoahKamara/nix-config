@@ -36,6 +36,10 @@ in
     extraSpecialArgs = {
       inherit inputs userProfile;
     };
-    users.${username} = import ../home;
+    users.${username}.imports = [
+      ../home/default.nix
+    ]
+    ++ lib.optionals pkgs.stdenv.isDarwin [ ../home/darwin.nix ]
+    ++ lib.optionals pkgs.stdenv.isLinux [ ../home/nixos.nix ];
   };
 }

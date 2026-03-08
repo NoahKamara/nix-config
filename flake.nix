@@ -66,36 +66,48 @@
         fullName = "Noah Kamara";
         email = "mail@noahkamara.com";
       };
+      baseSpecialArgs = { inherit self inputs; };
+      mkNixosHost =
+        host:
+        nixpkgs.lib.nixosSystem {
+          specialArgs = baseSpecialArgs // {
+            inherit userProfile;
+            isDarwin = false;
+            isLinux = true;
+          };
+          modules = [ ./hosts/${host} ];
+        };
+      mkDarwinHost =
+        {
+          host,
+          userProfileOverride ? { },
+        }:
+        nix-darwin.lib.darwinSystem {
+          specialArgs = baseSpecialArgs // {
+            userProfile = userProfile // userProfileOverride;
+            isDarwin = true;
+            isLinux = false;
+          };
+          modules = [ ./hosts/${host} ];
+        };
     in
     {
       # Macbook Pro 14"
-      darwinConfigurations."hammerhead" = nix-darwin.lib.darwinSystem {
-        specialArgs = {
-          inherit self inputs;
-          userProfile = userProfile // {
-            username = "noahkamara";
-          };
+      darwinConfigurations."hammerhead" = mkDarwinHost {
+        host = "hammerhead";
+        userProfileOverride = {
+          username = "noahkamara";
         };
-        modules = [ ./hosts/hammerhead ];
       };
 
       # Workstation PC
-      nixosConfigurations."nebulon" = nixpkgs.lib.nixosSystem {
-        specialArgs = { inherit self inputs userProfile; };
-        modules = [ ./hosts/nebulon ];
-      };
+      nixosConfigurations."nebulon" = mkNixosHost "nebulon";
 
       # VPS
-      nixosConfigurations."chimaera" = nixpkgs.lib.nixosSystem {
-        specialArgs = { inherit self inputs userProfile; };
-        modules = [ ./hosts/chimaera ];
-      };
+      nixosConfigurations."chimaera" = mkNixosHost "chimaera";
 
       # NAS
-      nixosConfigurations."stardust" = nixpkgs.lib.nixosSystem {
-        specialArgs = { inherit self inputs userProfile; };
-        modules = [ ./hosts/stardust ];
-      };
+      nixosConfigurations."stardust" = mkNixosHost "stardust";
 
       devShells = forAllSystems (
         system:
@@ -153,10 +165,13 @@
           let
             nixosConfig = self.nixosConfigurations.${host};
             targetSystem = nixosConfig.pkgs.stdenv.hostPlatform.system;
+            localSystem = if builtins ? currentSystem then builtins.currentSystem else "unknown";
           in
           {
             hostname = deployHostnames.${host} or nixosConfig.config.networking.hostName;
             sshUser = "root";
+
+            remoteBuild = targetSystem != localSystem;
 
             profiles.system = {
               user = "root";

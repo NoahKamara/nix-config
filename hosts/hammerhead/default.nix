@@ -11,17 +11,13 @@ let
 in
 {
   imports = [
-    ../../modules/shared
-    ../../modules/darwin
-    ../../modules/darwin/service-proxy.nix
-    ../../modules/darwin/gaming.nix
-    ../../modules/user
+    ../../platform/darwin
+    ../../profiles/common.nix
+    ../../profiles/desktop.nix
+    ../../profiles/dev.nix
     inputs.home-manager.darwinModules.home-manager
   ];
 
-  home-manager.users.${userProfile.username}.imports = [
-    ../../modules/home/desktop.nix
-  ];
   programs.fish.enable = true;
   environment.shells = [ pkgs.fish ];
   system.primaryUser = userProfile.username;

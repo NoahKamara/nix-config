@@ -1,8 +1,8 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 let
   caddyConfig = import ../shared/service-proxy-caddy-config.nix { inherit pkgs; };
 in
-{
+lib.mkIf pkgs.stdenv.isLinux {
   networking.firewall.allowedTCPPorts = [ 8080 ];
 
   systemd.services.service-proxy = {

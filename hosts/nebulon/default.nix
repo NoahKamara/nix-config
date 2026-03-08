@@ -8,11 +8,11 @@
 }:
 {
   imports = [
-    ../../modules/shared
-    ../../modules/nixos
-    ../../modules/nixos/service-proxy.nix
-    ../../modules/nixos/gaming.nix
-    ../../modules/user
+    ../../platform/nixos
+    ../../profiles/common.nix
+    ../../profiles/desktop.nix
+    ../../profiles/dev.nix
+    ../../profiles/gaming.nix
     inputs.home-manager.nixosModules.home-manager
     inputs.lanzaboote.nixosModules.lanzaboote
   ]
@@ -113,10 +113,6 @@
     enable = true;
     extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
   };
-
-  home-manager.users.${userProfile.username}.imports = [
-    ../../modules/home/desktop.nix
-  ];
 
   system.stateVersion = "24.11";
 

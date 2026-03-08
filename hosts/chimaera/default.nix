@@ -6,9 +6,9 @@
 }:
 {
   imports = [
-    ../../modules/shared
-    ../../modules/nixos
-    ../../modules/user
+    ../../platform/nixos
+    ../../profiles/common.nix
+    ../../profiles/dev.nix
     inputs.home-manager.nixosModules.home-manager
     inputs.disko.nixosModules.disko
     ./disko.nix
