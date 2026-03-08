@@ -34,48 +34,12 @@
     pkiBundle = "/var/lib/sbctl";
   };
   boot.loader.systemd-boot.enable = lib.mkForce false;
-  boot.loader.efi.canTouchEfiVariables = true;
-
-  # Auto-discover and sync Windows bootloader to the NixOS ESP.
-  systemd.services.sync-windows-boot = {
-    description = "Sync Windows bootloader to NixOS ESP";
-    wantedBy = [ "multi-user.target" ];
-    after = [ "local-fs.target" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-    };
-    path = [
-      pkgs.util-linux
-      pkgs.rsync
-    ];
-    script = ''
-      esp_source=$(findmnt -n -o SOURCE /boot)
-      tmpdir=$(mktemp -d)
-
-      for part in /dev/disk/by-uuid/*; do
-        [ -L "$part" ] || continue
-        resolved=$(readlink -f "$part")
-        [ "$resolved" != "$esp_source" ] || continue
-
-        fstype=$(lsblk -nro FSTYPE "$resolved" 2>/dev/null || true)
-        [ "$fstype" = "vfat" ] || continue
-
-        if mount -o ro "$resolved" "$tmpdir" 2>/dev/null; then
-          if [ -f "$tmpdir/EFI/Microsoft/Boot/bootmgfw.efi" ]; then
-            mkdir -p /boot/EFI/Microsoft
-            rsync -a --delete "$tmpdir/EFI/Microsoft/" /boot/EFI/Microsoft/
-            umount "$tmpdir"
-            rmdir "$tmpdir"
-            exit 0
-          fi
-          umount "$tmpdir"
-        fi
-      done
-
-      rmdir "$tmpdir" 2>/dev/null || true
-    '';
+  boot.loader.systemd-boot.configurationLimit = 12;
+  boot.loader.systemd-boot.windows = {
+    # Find this via EDK2 shell `map -c` + `ls <HANDLE>:\\EFI` (e.g. HD0b1 or FS1).
+    main.efiDeviceHandle = "HD0b1";
   };
+  boot.loader.efi.canTouchEfiVariables = true;
 
   programs.hyprland = {
     enable = true;
