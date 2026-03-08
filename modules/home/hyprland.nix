@@ -331,6 +331,7 @@ lib.mkIf pkgs.stdenv.isLinux {
       };
 
       tray = {
+        icon-size = 16;
         spacing = 4;
       };
     };
@@ -374,12 +375,22 @@ lib.mkIf pkgs.stdenv.isLinux {
         color: #d8dee9;
       }
 
-      #custom-power, #cpu, #memory, #pulseaudio, #network, #tray {
+      #custom-power, #cpu, #memory, #pulseaudio, #network, #gamemode, #tray {
         padding: 0 10px;
       }
 
+      /* Group 1: status modules with icon + text */
+      #cpu, #memory, #pulseaudio, #network {
+        font-size: 13px;
+      }
+
+      /* Group 2: icon-only modules */
       #custom-power {
         color: #bf616a;
+        font-size: 16px;
+      }
+
+      #gamemode {
         font-size: 16px;
       }
 
