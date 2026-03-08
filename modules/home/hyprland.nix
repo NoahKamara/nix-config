@@ -215,6 +215,7 @@ lib.mkIf pkgs.stdenv.isLinux {
         "network"
         "cpu"
         "memory"
+        "gamemode"
         "tray"
       ];
 
@@ -263,6 +264,14 @@ lib.mkIf pkgs.stdenv.isLinux {
         format-ethernet = "󰈀  {ifname}";
         format-disconnected = "󰖪 off";
         tooltip-format = "{ifname}: {ipaddr}/{cidr}";
+      };
+
+      "gamemode" = {
+        "format" = "{glyph}";
+        "format-alt" = "{glyph} {count}";
+        "tooltip" = true;
+        "tooltip-format" = "Games running: {count}";
+        "hide-not-running" = true;
       };
 
       tray = {
