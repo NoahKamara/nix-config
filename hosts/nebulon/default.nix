@@ -24,6 +24,7 @@
 
   networking.hostName = "nebulon";
   networking.networkmanager.enable = true;
+  time.timeZone = "Europe/Berlin";
   networking.interfaces.enp34s0.wakeOnLan = {
     enable = true;
     policy = [ "magic" ];
