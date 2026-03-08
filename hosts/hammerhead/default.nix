@@ -25,9 +25,9 @@ in
   networking.hostName = "hammerhead";
 
   # Road-warrior WireGuard client to the VPS (chimaera).
-  # Replace the placeholder server public key, then set autostart = true.
+  # nix-darwin will create a launchd daemon (wg-quick-wg0) and use wireguard-go.
   networking.wg-quick.interfaces.${wgInterface} = {
-    autostart = false;
+    autostart = true;
     address = [
       "10.44.0.3/32"
       "fd42:44:44::3/128"
