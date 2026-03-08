@@ -266,13 +266,13 @@ lib.mkIf pkgs.stdenv.isLinux {
         tooltip = false;
         menu = "on-click";
         menu-file = "${config.xdg.configHome}/waybar/power-menu.xml";
-        menu-actions = [
-          "loginctl lock-session"
-          "hyprctl dispatch exit"
-          "systemctl suspend"
-          "systemctl reboot"
-          "systemctl poweroff"
-        ];
+        menu-actions = {
+          lock = "${pkgs.systemd}/bin/loginctl lock-session";
+          logout = "${pkgs.hyprland}/bin/hyprctl dispatch exit";
+          suspend = "${pkgs.systemd}/bin/systemctl suspend";
+          reboot = "${pkgs.systemd}/bin/systemctl reboot";
+          poweroff = "${pkgs.systemd}/bin/systemctl poweroff";
+        };
       };
 
       "hyprland/workspaces" = {
