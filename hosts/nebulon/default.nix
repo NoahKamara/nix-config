@@ -24,6 +24,10 @@
 
   networking.hostName = "nebulon";
   networking.networkmanager.enable = true;
+  networking.interfaces.enp34s0.wakeOnLan = {
+    enable = true;
+    policy = [ "magic" ];
+  };
 
   boot.lanzaboote = {
     enable = true;
