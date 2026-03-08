@@ -27,7 +27,6 @@
 
       direnv allow
     '')
-    (import ../../pkgs/service-expose.nix { inherit pkgs; })
   ];
 
   programs.home-manager.enable = true;
