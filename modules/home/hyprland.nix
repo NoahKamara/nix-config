@@ -41,7 +41,10 @@ lib.mkIf pkgs.stdenv.isLinux {
     settings = {
       "$mod" = "SUPER";
 
-      monitor = [ ", preferred, auto, 1" ];
+      monitor = [
+        "DP-1,3440x1440@143.92,auto,1"
+        ", preferred, auto, 1"
+      ];
 
       exec-once = [
         "waybar"
