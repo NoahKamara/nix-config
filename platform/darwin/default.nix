@@ -117,5 +117,8 @@
       "obsidian"
       "raycast"
     ];
+    brews = [
+      "swiftformat" # todo: check up on swift 6 nix progress
+    ];
   };
 }
