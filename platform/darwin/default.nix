@@ -1,4 +1,9 @@
-{ config, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
   # nix-darwin does not change the shell for existing users by default,
@@ -74,6 +79,13 @@
     };
   };
 
+  # Apple Silicon Homebrew lives in /opt/homebrew; nix-darwin's default PATH only adds /usr/local/bin.
+  # `homebrew.enable` runs `brew bundle` but does not add this to PATH (unlike optional shell integration
+  # in newer manuals: https://nix-darwin.github.io/nix-darwin/manual/index.html#opt-homebrew.enable ).
+  environment.systemPath = lib.mkIf pkgs.stdenv.hostPlatform.isAarch64 (
+    lib.mkAfter [ "/opt/homebrew/bin" ]
+  );
+
   homebrew = {
     enable = true;
     onActivation = {
@@ -92,6 +104,7 @@
       "antigravity"
       "codex"
       "cursor"
+      "t3-code"
 
       # System Tools
       "betterdisplay"
@@ -118,7 +131,7 @@
       "raycast"
     ];
     brews = [
-      "swiftformat" # todo: check up on swift 6 nix progress
+      "swiftformat"
     ];
   };
 }
