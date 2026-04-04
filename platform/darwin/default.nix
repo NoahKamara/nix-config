@@ -89,7 +89,7 @@
   homebrew = {
     enable = true;
     onActivation = {
-      autoUpdate = false;
+      autoUpdate = true;
       cleanup = "uninstall";
     };
     taps = [
