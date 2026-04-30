@@ -21,6 +21,7 @@
       "https://nix-community.cachix.org"
       "https://ai.cachix.org"
       "https://comfyui.cachix.org"
+      "https://cuda-maintainers.cachix.org"
     ];
     trusted-substituters = [
       "https://ai.cachix.org"
@@ -30,6 +31,7 @@
       "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
       "ai.cachix.org-1:N9dzRK+alWwoKXQlnn0H6aUx0lU/mspIoz8hMvGvbbc="
       "comfyui.cachix.org-1:33mf9VzoIjzVbp0zwj+fT51HG0y31ZTK3nzYZAX0rec="
+      "cuda-maintainers.cachix.org-1:0dq3bujKpuEPMCX6U4WylrUDZ9JyUG0VpVZa7CNfq5E="
     ];
   };
   nix.enable = true;
