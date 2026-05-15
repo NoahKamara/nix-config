@@ -7,6 +7,7 @@
 {
   imports = [
     ../../platform/nixos
+    ../../modules/nixos/forgejo.nix
     ../../profiles/common.nix
     ../../profiles/dev.nix
     inputs.home-manager.nixosModules.home-manager
@@ -20,6 +21,11 @@
   networking.fqdn = "chimaera.noahkamara.com";
   networking.useDHCP = false;
   networking.useNetworkd = true;
+  noah.services.forgejo = {
+    enable = true;
+    hostName = "git.noahkamara.com";
+    bootstrapAdmin.enable = true;
+  };
   networking.firewall.allowedUDPPorts = [
     51820
     64738
