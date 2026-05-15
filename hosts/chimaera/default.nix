@@ -20,10 +20,14 @@
   networking.fqdn = "chimaera.noahkamara.com";
   networking.useDHCP = false;
   networking.useNetworkd = true;
-  networking.firewall.allowedUDPPorts = [ 51820 ];
+  networking.firewall.allowedUDPPorts = [
+    51820
+    64738
+  ];
   networking.firewall.allowedTCPPorts = [
     80
     443
+    64738
   ];
   networking.nat = {
     enable = true;
@@ -152,6 +156,14 @@
         reverse_proxy 192.168.178.71:8123
       '';
     };
+  };
+
+  # Mumble (Murmur) voice server.
+  services.murmur = {
+    enable = true;
+    openFirewall = false; # managed explicitly above
+    registerName = "chimaera";
+    bandwidth = 128000;
   };
 
   boot.loader.grub = {

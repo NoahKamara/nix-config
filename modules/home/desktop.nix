@@ -109,12 +109,19 @@ let
         toggle_relative_line_numbers = true;
       };
       autosave = "on_focus_change";
+      agent_servers = {
+        OpenCode = {
+          command = "opencode";
+          args = [ "acp" ];
+        };
+      };
       auto_install_extensions = {
         "docker-compose" = true;
         "html" = true;
         "nix" = true;
         "dockerfile" = true;
         "toml" = true;
+        "swift" = true;
       };
     };
   };
