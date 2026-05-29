@@ -8,5 +8,9 @@
     format = "yaml";
   };
 
+  sops.secrets.icloud-app-password = {
+    format = "yaml";
+  };
+
   sops.secrets.wg0-private-key = { };
 }

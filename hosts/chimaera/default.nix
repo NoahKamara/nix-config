@@ -32,6 +32,7 @@
   noah.services.hermes-agent = {
     enable = true;
     dashboard.insecure = true;
+    calendar.enable = true;
   };
   networking.firewall.allowedUDPPorts = [
     51820
