@@ -33,6 +33,16 @@
     enable = true;
     dashboard.insecure = true;
     calendar.enable = true;
+    settings.mcp_servers.todoist = {
+      command = "npx";
+      args = [
+        "-y"
+        "@doist/todoist-mcp"
+      ];
+      env = {
+        TODOIST_API_KEY = "\${TODOIST_API_KEY}";
+      };
+    };
   };
   networking.firewall.allowedUDPPorts = [
     51820
