@@ -130,6 +130,9 @@
       "obsidian"
       "raycast"
     ];
+    masApps = {
+      "Todoist" = 585829637;
+    };
     brews = [
       "swiftformat"
     ];
