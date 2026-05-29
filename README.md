@@ -257,6 +257,27 @@ Or use the helper script:
 
 ---
 
+## Secrets
+
+Secrets are managed with [sops-nix](https://github.com/Mic92/sops-nix). Encrypted files live under `secrets/`; edit them from a development shell so `sops`, `age`, and `ssh-to-age` are available:
+
+```bash
+nix develop
+sops secrets/chimaera.yaml
+sops secrets/hammerhead.yaml
+```
+
+`chimaera` decrypts with its SSH host Ed25519 key. If the VPS is reprovisioned, update the `chimaera_host` recipient in `.sops.yaml` with:
+
+```bash
+ssh root@chimaera.noahkamara.com \
+  'nix-shell -p ssh-to-age --run "ssh-to-age < /etc/ssh/ssh_host_ed25519_key.pub"'
+```
+
+`hammerhead` decrypts with the local age key at `~/Library/Application Support/sops/age/keys.txt`. Never put API keys or private keys directly in Nix expressions; wire services to `config.sops.secrets.<name>.path` instead.
+
+---
+
 ## Development Shells
 
 You can manually enter the default development shell (with `jq`, `just`, etc.) by running:

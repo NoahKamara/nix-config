@@ -2,7 +2,6 @@
   config,
   inputs,
   lib,
-  pkgs,
   ...
 }:
 {
@@ -10,6 +9,7 @@
     ../../platform/nixos
     ../../modules/nixos/sops.nix
     ../../modules/nixos/forgejo.nix
+    ../../modules/nixos/hermes-agent.nix
     ./sops.nix
     ../../profiles/common.nix
     ../../profiles/dev.nix
@@ -29,6 +29,7 @@
     hostName = "git.noahkamara.com";
     bootstrapAdmin.enable = true;
   };
+  noah.services.hermes-agent.enable = true;
   networking.firewall.allowedUDPPorts = [
     51820
     64738
@@ -79,14 +80,14 @@
       #     "fd42:44:44::3/128"
       #   ];
       # }
-      # {
-      #   # hammerhead (pubkey from: wg pubkey < secrets/hammerhead.yaml wg0-private-key)
-      #   publicKey = "X6JrUfnkc8D0QiqIOsm+1j9rbLifX1+H0Msu3Y7x4WM=";
-      #   allowedIPs = [
-      #     "10.44.0.3/32"
-      #     "fd42:44:44::3/128"
-      #   ];
-      # }
+      {
+        # hammerhead
+        publicKey = "X6JrUfnkc8D0QiqIOsm+1j9rbLifX1+H0Msu3Y7x4WM=";
+        allowedIPs = [
+          "10.44.0.3/32"
+          "fd42:44:44::3/128"
+        ];
+      }
     ];
   };
 
