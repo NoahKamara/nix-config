@@ -336,6 +336,7 @@ in
         serviceConfig = {
           User = config.services.hermes-agent.user;
           Group = config.services.hermes-agent.group;
+          SupplementaryGroups = [ "docker" ];
           WorkingDirectory = config.services.hermes-agent.workingDirectory;
           ExecStart = lib.concatStringsSep " " (
             [
@@ -357,6 +358,7 @@ in
 
         path = [
           config.services.hermes-agent.package
+          pkgs.docker
           pkgs.bash
           pkgs.coreutils
           pkgs.git

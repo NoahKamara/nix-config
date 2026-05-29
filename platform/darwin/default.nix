@@ -13,6 +13,18 @@
       echo "Changing user shell to fish..."
       chsh -s ${pkgs.fish}/bin/fish ${config.system.primaryUser}
     fi
+
+    # mDNSResponder cannot follow Nix store symlinks for /etc/hosts.
+    # Replace the symlink with a real copy so macOS DNS resolution works.
+    if [ -L /etc/hosts ]; then
+      resolved=$(readlink -f /etc/hosts)
+      if [ -f "$resolved" ]; then
+        cp "$resolved" /etc/hosts.tmp
+        rm /etc/hosts
+        mv /etc/hosts.tmp /etc/hosts
+        killall -HUP mDNSResponder 2>/dev/null || true
+      fi
+    fi
   '';
 
   security.pam.services.sudo_local = {
