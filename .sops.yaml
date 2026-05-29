@@ -1,0 +1,17 @@
+# Personal age key: age-keygen -y ~/.config/sops/age/keys.txt (or .sops-age-key.txt after bootstrap)
+# Chimaera host key: ssh root@chimaera.noahkamara.com \
+#   'nix-shell -p ssh-to-age --run "ssh-to-age < /etc/ssh/ssh_host_ed25519_key.pub"'
+keys:
+  - &personal_age age10mup7n4xt9q8xmtg0w9hvgpvyfgmvq363tvhddgtrrvzx2qa0gps004333
+  - &chimaera_host age1jr7rrvd73clhg9pcwcc4yqyuh2sujvfhca9fyuq00j3vgnj2edus2qm7ew
+
+creation_rules:
+  - path_regex: secrets/chimaera\.yaml$
+    key_groups:
+      - age:
+          - *personal_age
+          - *chimaera_host
+  - path_regex: secrets/hammerhead\.yaml$
+    key_groups:
+      - age:
+          - *personal_age

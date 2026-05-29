@@ -1,4 +1,5 @@
 {
+  config,
   inputs,
   lib,
   pkgs,
@@ -7,7 +8,9 @@
 {
   imports = [
     ../../platform/nixos
+    ../../modules/nixos/sops.nix
     ../../modules/nixos/forgejo.nix
+    ./sops.nix
     ../../profiles/common.nix
     ../../profiles/dev.nix
     inputs.home-manager.nixosModules.home-manager
@@ -49,9 +52,6 @@
     "net.ipv6.conf.all.forwarding" = 1;
   };
 
-  # WireGuard server on the VPS. Keep the private key on the machine and point
-  # this file path to it (for example via nixos-anywhere file upload or a
-  # provisioning step).
   networking.wireguard.interfaces.wg0 = {
     ips = [
       "10.44.0.1/24"
@@ -59,7 +59,7 @@
     ];
     mtu = 1380;
     listenPort = 51820;
-    privateKeyFile = "/etc/wireguard/wg0.key";
+    privateKeyFile = config.sops.secrets.wg0-private-key.path;
 
     peers = [
       {
@@ -80,50 +80,14 @@
       #   ];
       # }
       # {
-      #   # hammerhead
-      #   publicKey = "hZfrGb9gDFAm0OyQgF1MauMCTw8btwXGQ9LsixQYWS8=";
+      #   # hammerhead (pubkey from: wg pubkey < secrets/hammerhead.yaml wg0-private-key)
+      #   publicKey = "X6JrUfnkc8D0QiqIOsm+1j9rbLifX1+H0Msu3Y7x4WM=";
       #   allowedIPs = [
-      #     "10.44.0.4/32"
-      #     "fd42:44:44::4/128"
+      #     "10.44.0.3/32"
+      #     "fd42:44:44::3/128"
       #   ];
       # }
     ];
-  };
-
-  systemd.tmpfiles.rules = [
-    "d /etc/wireguard 0700 root root -"
-  ];
-
-  # Generate the WireGuard key at boot if missing, decoupled from networkd restarts.
-  systemd.services.wireguard-keygen-wg0 = {
-    description = "Generate WireGuard private key for wg0";
-    wantedBy = [ "multi-user.target" ];
-    unitConfig.ConditionPathExists = "!/etc/wireguard/wg0.key";
-    path = [
-      pkgs.coreutils
-      pkgs.wireguard-tools
-    ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-    };
-    script = ''
-      set -eu
-      keyFile=/etc/wireguard/wg0.key
-      install -d -m 700 /etc/wireguard
-      if [ -s "$keyFile" ]; then
-        chmod 600 "$keyFile"
-        chown root:root "$keyFile"
-        exit 0
-      fi
-
-      tmpKeyFile="$(mktemp /etc/wireguard/wg0.key.XXXXXX)"
-      umask 077
-      wg genkey > "$tmpKeyFile"
-      chmod 600 "$tmpKeyFile"
-      chown root:root "$tmpKeyFile"
-      mv -f "$tmpKeyFile" "$keyFile"
-    '';
   };
 
   systemd.network.enable = true;

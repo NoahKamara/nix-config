@@ -15,6 +15,8 @@
     pre-commit.inputs.nixpkgs.follows = "nixpkgs";
     lanzaboote.url = "github:nix-community/lanzaboote/v1.0.0";
     lanzaboote.inputs.nixpkgs.follows = "nixpkgs";
+    sops-nix.url = "github:Mic92/sops-nix";
+    sops-nix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs =
@@ -88,7 +90,10 @@
             isDarwin = true;
             isLinux = false;
           };
-          modules = [ ./hosts/${host} ];
+          modules = [
+            inputs.sops-nix.darwinModules.sops
+            ./hosts/${host}
+          ];
         };
     in
     {
@@ -121,11 +126,14 @@
           default = pkgs.mkShellNoCC {
             packages =
               (with pkgs; [
+                age
                 jq
                 just
                 nil
                 nixd
                 nixfmt
+                sops
+                ssh-to-age
               ])
               ++ preCommitChecks.${system}.enabledPackages;
             shellHook = preCommitChecks.${system}.shellHook;

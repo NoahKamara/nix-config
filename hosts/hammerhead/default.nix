@@ -1,4 +1,5 @@
 {
+  config,
   inputs,
   lib,
   pkgs,
@@ -7,7 +8,6 @@
 }:
 let
   wgInterface = "wg0";
-  wgPrivateKeyFile = "/etc/wireguard/${wgInterface}.key";
 in
 {
   imports = [
@@ -16,6 +16,7 @@ in
     ../../profiles/desktop.nix
     ../../profiles/dev.nix
     inputs.home-manager.darwinModules.home-manager
+    ./sops.nix
   ];
 
   programs.fish.enable = true;
@@ -32,7 +33,7 @@ in
       "10.44.0.3/32"
       "fd42:44:44::3/128"
     ];
-    privateKeyFile = wgPrivateKeyFile;
+    privateKeyFile = config.sops.secrets.wg0-private-key.path;
     peers = [
       {
         # Obtain this from the VPS:
@@ -47,18 +48,6 @@ in
       }
     ];
   };
-
-  # Keep the private key local on the machine and generate it once.
-  system.activationScripts.postActivation.text = lib.mkAfter ''
-    set -eu
-    /usr/bin/install -d -m 700 /etc/wireguard
-    if [ ! -s "${wgPrivateKeyFile}" ]; then
-      umask 077
-      ${pkgs.wireguard-tools}/bin/wg genkey > "${wgPrivateKeyFile}"
-    fi
-    /bin/chmod 600 "${wgPrivateKeyFile}"
-    /usr/sbin/chown root:wheel "${wgPrivateKeyFile}"
-  '';
 
   system.stateVersion = 6;
 
