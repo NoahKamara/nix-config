@@ -126,6 +126,10 @@
       "home.noahkamara.com".extraConfig = ''
         reverse_proxy 192.168.178.71:8123
       '';
+      # Hermes
+      "agent.noahkamara.com".extraConfig = ''
+        reverse_proxy 127.0.0.1:8642
+      '';
     };
   };
 
