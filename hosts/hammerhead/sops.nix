@@ -5,6 +5,7 @@ in
 {
   sops.defaultSopsFile = ../../secrets/hammerhead.yaml;
   sops.age.keyFile = ageKeyFile;
+  sops.age.sshKeyPaths = [ ];
 
   sops.secrets.wg0-private-key = { };
 }
