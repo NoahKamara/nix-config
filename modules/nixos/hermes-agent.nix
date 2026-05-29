@@ -75,7 +75,11 @@ in
 
       settings = lib.mkMerge [
         {
-          model.default = "anthropic/claude-sonnet-4";
+          model = {
+            provider = "openrouter";
+            default = "deepseek/deepseek-v4-pro";
+            base_url = "https://openrouter.ai/api/v1";
+          };
         }
         cfg.settings
       ];
