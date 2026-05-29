@@ -1,5 +1,6 @@
 {
   config,
+  lib,
   inputs,
   pkgs,
   userProfile,
@@ -23,6 +24,12 @@ in
   system.primaryUser = userProfile.username;
 
   networking.hostName = "hammerhead";
+
+  # Resolve tunnel-gated vhosts to chimaera's WireGuard IP so requests
+  # arrive from 10.44.0.3 and pass the remote_ip matcher in Caddy.
+  environment.etc.hosts.text = lib.mkAfter ''
+    10.44.0.1 agent.noahkamara.com
+  '';
 
   # Road-warrior WireGuard client to the VPS (chimaera).
   # nix-darwin will create a launchd daemon (wg-quick-wg0) and use wireguard-go.
