@@ -266,10 +266,10 @@ in
       ) config.sops.secrets.${cfg.calendar.appPasswordSopsName}.sopsFile;
 
       # Hermes intentionally exits 1 on unmarked SIGTERM so Restart= can revive it.
-      # During nixos-rebuild/deploy-rs that makes stop look like a failure.
+      # During nixos-rebuild that makes stop look like a failure and can hit StartLimit.
       systemd.services.hermes-agent = {
         startLimitIntervalSec = 0;
-        serviceConfig.SuccessExitStatus = "1";
+        serviceConfig.SuccessExitStatus = [ "1" ];
         preStop = lib.mkBefore ''
           if ${pkgs.docker}/bin/docker inspect hermes-agent &>/dev/null; then
             ${pkgs.docker}/bin/docker exec hermes-agent \
@@ -277,13 +277,6 @@ in
           fi
         '';
       };
-
-      # Belt-and-suspenders: ensure the override survives serviceConfig merge quirks.
-      environment.etc."systemd/system/hermes-agent.service.d/success-exit.conf".text = ''
-        [Service]
-        SuccessExitStatus=1
-        StartLimitIntervalSec=0
-      '';
 
       systemd.services.hermes-dashboard = mkIf cfg.dashboard.enable {
         description = "Hermes Agent Web Dashboard";
