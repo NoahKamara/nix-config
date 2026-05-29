@@ -2,6 +2,7 @@
   config,
   lib,
   inputs,
+  pkgs,
   userProfile ? null,
   ...
 }:
@@ -16,6 +17,20 @@ let
   cfg = config.noah.services.hermes-agent;
   defaultHostUser =
     if userProfile != null && userProfile ? username then userProfile.username else "noah";
+  restartTriggerConfig = {
+    inherit (config.services.hermes-agent)
+      container
+      documents
+      environment
+      extraArgs
+      extraDependencyGroups
+      mcpServers
+      settings
+      ;
+    extraPackages = map toString config.services.hermes-agent.extraPackages;
+    extraPlugins = map toString config.services.hermes-agent.extraPlugins;
+    extraPythonPackages = map toString config.services.hermes-agent.extraPythonPackages;
+  };
 in
 {
   imports = [
@@ -84,5 +99,11 @@ in
         cfg.settings
       ];
     };
+
+    systemd.services.hermes-agent.restartTriggers = [
+      config.services.hermes-agent.package
+      (pkgs.writeText "hermes-agent-restart-trigger.json" (builtins.toJSON restartTriggerConfig))
+    ]
+    ++ lib.optional (cfg.sopsSecretName != null) config.sops.secrets.${cfg.sopsSecretName}.sopsFile;
   };
 }
