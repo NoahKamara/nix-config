@@ -29,7 +29,10 @@
     hostName = "git.noahkamara.com";
     bootstrapAdmin.enable = true;
   };
-  noah.services.hermes-agent.enable = true;
+  noah.services.hermes-agent = {
+    enable = true;
+    dashboard.insecure = true;
+  };
   networking.firewall.allowedUDPPorts = [
     51820
     64738
@@ -128,7 +131,11 @@
       '';
       # Hermes
       "agent.noahkamara.com".extraConfig = ''
-        reverse_proxy 127.0.0.1:8642
+        @wireguard remote_ip 10.44.0.0/24 fd42:44:44::/64 192.168.178.0/24
+        handle @wireguard {
+          reverse_proxy 127.0.0.1:${toString config.noah.services.hermes-agent.dashboard.port}
+        }
+        respond 404
       '';
     };
   };

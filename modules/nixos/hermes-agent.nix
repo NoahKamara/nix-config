@@ -46,6 +46,8 @@ in
       description = ''
         sops-nix secret name (YAML key in the host secrets file).
         Decrypted path is passed to services.hermes-agent.environmentFiles.
+        For Telegram, include TELEGRAM_BOT_TOKEN and TELEGRAM_ALLOWED_USERS
+        (dotenv-style KEY=value lines in the secret value).
         Set null to disable sops-backed env files.
       '';
     };
@@ -54,6 +56,39 @@ in
       type = types.attrs;
       default = { };
       description = "Declarative config.yaml fragment (deep-merged by the upstream module).";
+    };
+
+    dashboard = {
+      enable = mkOption {
+        type = types.bool;
+        default = true;
+        description = "Enable the Hermes web dashboard.";
+      };
+
+      host = mkOption {
+        type = types.str;
+        default = "0.0.0.0";
+        description = "Bind address for the Hermes dashboard.";
+      };
+
+      port = mkOption {
+        type = types.port;
+        default = 9119;
+        description = "Port for the Hermes dashboard.";
+      };
+
+      publicUrl = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        example = "https://agent.example.com";
+        description = "Public URL for dashboard OAuth callbacks behind a reverse proxy.";
+      };
+
+      insecure = mkOption {
+        type = types.bool;
+        default = false;
+        description = "Pass --insecure to disable the dashboard OAuth gate for externally protected deployments.";
+      };
     };
 
     container = {
@@ -78,7 +113,12 @@ in
 
     services.hermes-agent = {
       enable = true;
+      # Default package omits messaging SDKs; lazy-install cannot write to /nix/store.
+      package = inputs.hermes-agent.packages.${pkgs.stdenv.hostPlatform.system}.messaging;
       addToSystemPackages = true;
+      environment = lib.optionalAttrs (cfg.dashboard.publicUrl != null) {
+        HERMES_DASHBOARD_PUBLIC_URL = cfg.dashboard.publicUrl;
+      };
       environmentFiles =
         if cfg.sopsSecretName != null then [ config.sops.secrets.${cfg.sopsSecretName}.path ] else [ ];
 
@@ -105,5 +145,54 @@ in
       (pkgs.writeText "hermes-agent-restart-trigger.json" (builtins.toJSON restartTriggerConfig))
     ]
     ++ lib.optional (cfg.sopsSecretName != null) config.sops.secrets.${cfg.sopsSecretName}.sopsFile;
+
+    systemd.services.hermes-dashboard = mkIf cfg.dashboard.enable {
+      description = "Hermes Agent Web Dashboard";
+      wantedBy = [ "multi-user.target" ];
+      after = [
+        "network-online.target"
+        "hermes-agent.service"
+      ];
+      wants = [
+        "network-online.target"
+        "hermes-agent.service"
+      ];
+
+      environment = {
+        HOME = config.services.hermes-agent.stateDir;
+        HERMES_HOME = "${config.services.hermes-agent.stateDir}/.hermes";
+        HERMES_MANAGED = "true";
+        MESSAGING_CWD = config.services.hermes-agent.workingDirectory;
+      };
+
+      serviceConfig = {
+        User = config.services.hermes-agent.user;
+        Group = config.services.hermes-agent.group;
+        WorkingDirectory = config.services.hermes-agent.workingDirectory;
+        ExecStart = lib.concatStringsSep " " (
+          [
+            "${lib.getExe config.services.hermes-agent.package}"
+            "dashboard"
+            "--host"
+            cfg.dashboard.host
+            "--port"
+            (toString cfg.dashboard.port)
+            "--no-open"
+            "--tui"
+          ]
+          ++ lib.optional cfg.dashboard.insecure "--insecure"
+        );
+        Restart = "always";
+        RestartSec = 5;
+        UMask = "0007";
+      };
+
+      path = [
+        config.services.hermes-agent.package
+        pkgs.bash
+        pkgs.coreutils
+        pkgs.git
+      ];
+    };
   };
 }
