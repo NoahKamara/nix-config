@@ -131,6 +131,8 @@
       "raycast"
     ];
     masApps = {
+      "Mela" = 1568924476;
+      "Telegram" = 747648890;
       "Todoist" = 585829637;
     };
     brews = [
