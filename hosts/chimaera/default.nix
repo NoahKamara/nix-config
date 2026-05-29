@@ -39,16 +39,7 @@
       "16bc2f30-e9b8-4f7e-b84e-83957740ac0c" # Familie
       "7A1B3D74-0CC1-4734-8793-1B982BBF0407" # Mela
     ];
-    settings.mcp_servers.todoist = {
-      command = "npx";
-      args = [
-        "-y"
-        "@doist/todoist-mcp"
-      ];
-      env = {
-        TODOIST_API_KEY = "\${TODOIST_API_KEY}";
-      };
-    };
+    todoist.enable = true;
   };
   networking.firewall.allowedUDPPorts = [
     51820

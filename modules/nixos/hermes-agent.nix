@@ -196,6 +196,13 @@ in
         '';
       };
     };
+
+    todoist = {
+      enable = mkEnableOption ''
+        Todoist task management via Doist's hosted MCP endpoint.
+        Requires TODOIST_API_KEY in the sops-backed hermes-env secret.
+      '';
+    };
   };
 
   config = lib.mkMerge [
@@ -247,6 +254,14 @@ in
           (lib.optionalAttrs cfg.calendar.enable {
             skills.always_load = [ "icloud-calendar" ];
             skills.external_dirs = [ icloudCalendarSkill ];
+          })
+          (lib.optionalAttrs cfg.todoist.enable {
+            mcp_servers.todoist = {
+              url = "https://ai.todoist.net/mcp";
+              headers = {
+                Authorization = "Bearer \${TODOIST_API_KEY}";
+              };
+            };
           })
           cfg.settings
         ];
