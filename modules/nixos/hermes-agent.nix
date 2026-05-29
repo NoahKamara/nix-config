@@ -28,6 +28,11 @@ let
     mkdir -p $out/icloud-calendar
     cp ${icloudCalendarSkillMd} $out/icloud-calendar/SKILL.md
   '';
+  vdirsyncerCollections =
+    if cfg.calendar.collections != [ ] then
+      "[${lib.concatStringsSep ", " (map (c: ''"${c}"'') cfg.calendar.collections)}]"
+    else
+      "[\"from b\"]";
   vdirsyncerConfig = pkgs.writeText "hermes-vdirsyncer-config" ''
     [general]
     status_path = "${containerDataDir}/calendar/status"
@@ -35,7 +40,7 @@ let
     [pair icloud_calendars]
     a = "icloud_local"
     b = "icloud_remote"
-    collections = ["from a", "from b"]
+    collections = ${vdirsyncerCollections}
 
     [storage icloud_local]
     type = "filesystem"
@@ -47,6 +52,7 @@ let
     url = "https://caldav.icloud.com/"
     username = "${cfg.calendar.appleId}"
     password.fetch = ["command", "cat", "${containerDataDir}/.hermes/icloud-calendar-password"]
+    item_types = ["VEVENT"]
   '';
   khalConfig = pkgs.writeText "hermes-khal-config" ''
     [locale]
@@ -172,6 +178,21 @@ in
           sops-nix secret name (YAML key in the host secrets file) containing the
           iCloud app-specific password from appleid.apple.com.
           Set null to manage credentials manually in $HERMES_HOME.
+        '';
+      };
+
+      collections = mkOption {
+        type = types.listOf types.str;
+        default = [ ];
+        example = [
+          "home"
+          "6BF07365-CE70-4C52-A646-EABDE233726D"
+        ];
+        description = ''
+          iCloud calendar collection IDs to sync (from `vdirsyncer discover --list`).
+          iCloud Reminder lists (Einkauf, To Do, etc.) also appear over CalDAV —
+          do not include them here. When empty, all remote collections are synced
+          (not recommended for iCloud). VTODO items are always excluded via item_types.
         '';
       };
     };

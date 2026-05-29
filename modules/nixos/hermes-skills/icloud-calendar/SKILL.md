@@ -16,6 +16,8 @@ Syncs iCloud Calendar to local `.ics` files with **vdirsyncer**, then lists/crea
 
 Tools live at `/data/bin/vdirsyncer` and `/data/bin/khal` (Nix-managed, available in the Hermes container).
 
+**Note:** iCloud Reminder lists (Einkauf, To Do, etc.) also show up over CalDAV. Only event calendars are configured for sync — not reminders. For tasks, use Todoist or another task integration.
+
 ## Workflow
 
 Always sync before reading and after writing:
@@ -52,10 +54,10 @@ Use ISO dates and 24h times. Sync after creating.
 
 ## First-time setup
 
-If `vdirsyncer sync` fails with an undiscovered collections error, run once:
+If `vdirsyncer sync` fails with an undiscovered collections error, run once (answer **y** only for event calendars, **n** for Reminder lists like Einkauf/To Do):
 
 ```bash
-/data/bin/vdirsyncer discover
+yes | /data/bin/vdirsyncer discover
 /data/bin/vdirsyncer sync
 ```
 
