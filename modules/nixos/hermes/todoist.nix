@@ -13,8 +13,42 @@ let
     ;
   cfg = config.noah.services.hermes-agent;
   dCfg = cfg.todoist.delegation;
+  hermesStateDir = config.services.hermes-agent.stateDir;
+  hermesUser = config.services.hermes-agent.user;
+  hermesGroup = config.services.hermes-agent.group;
+  npx = "${pkgs.nodejs_22}/bin/npx";
 
   mkCronJob = import ./lib/mkCronJob.nix { inherit config lib pkgs; };
+
+  # Deep-merge keeps stale HTTP transport keys; stdio MCP must not also carry url.
+  stripTodoistHttpMcpTransport = pkgs.writeScript "hermes-strip-todoist-http-mcp" ''
+    #!${pkgs.python3.withPackages (ps: [ ps.pyyaml ])}/bin/python3
+    import sys
+    from pathlib import Path
+
+    import yaml
+
+    config_path = Path(sys.argv[1])
+    if not config_path.exists():
+        sys.exit(0)
+
+    with open(config_path) as f:
+        data = yaml.safe_load(f) or {}
+
+    todoist = (data.get("mcp_servers") or {}).get("todoist")
+    if not isinstance(todoist, dict) or not todoist.get("command"):
+        sys.exit(0)
+
+    changed = False
+    for key in ("url", "headers"):
+        if key in todoist:
+            del todoist[key]
+            changed = True
+
+    if changed:
+        with open(config_path, "w") as f:
+            yaml.dump(data, f, default_flow_style=False, sort_keys=False)
+  '';
 
   pollScript = pkgs.writeText "hermes-check-todos.py" (
     builtins.replaceStrings
@@ -49,7 +83,7 @@ in
 {
   options.noah.services.hermes-agent.todoist = {
     enable = mkEnableOption ''
-      Todoist task management via Doist's hosted MCP endpoint.
+      Todoist task management via @doist/todoist-mcp (stdio MCP).
       Requires TODOIST_API_KEY in the sops-backed hermes-env secret.
     '';
 
@@ -120,10 +154,23 @@ in
   config = mkIf (cfg.enable && cfg.todoist.enable) (
     lib.mkMerge [
       {
-        services.hermes-agent.mcpServers.todoist = {
-          url = "https://ai.todoist.net/mcp";
-          headers.Authorization = "Bearer \${TODOIST_API_KEY}";
+        services.hermes-agent = {
+          extraPackages = [ pkgs.nodejs_22 ];
+
+          mcpServers.todoist = {
+            command = npx;
+            args = [
+              "-y"
+              "@doist/todoist-mcp"
+            ];
+            env.TODOIST_API_KEY = "\${TODOIST_API_KEY}";
+          };
         };
+
+        system.activationScripts.hermes-agent-todoist-mcp = lib.stringAfter [ "hermes-agent-setup" ] ''
+          ${stripTodoistHttpMcpTransport} ${hermesStateDir}/.hermes/config.yaml
+          chown ${hermesUser}:${hermesGroup} ${hermesStateDir}/.hermes/config.yaml
+        '';
       }
 
       (mkIf dCfg.enable {

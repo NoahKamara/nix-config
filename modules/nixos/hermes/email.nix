@@ -135,7 +135,7 @@ in
           extraPackages = [ pkgs.nodejs_22 ];
 
           mcpServers.agentmail = {
-            command = "npx";
+            command = "${pkgs.nodejs_22}/bin/npx";
             args = [
               "-y"
               "agentmail-mcp"

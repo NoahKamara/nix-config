@@ -35,11 +35,14 @@ let
   registerScript = pkgs.writeShellScript "hermes-${name}-register" ''
     set -euo pipefail
 
-    hermes() { ${pkgs.docker}/bin/docker exec ${containerName} ${containerHermes} "$@"; }
+    hermes() {
+      ${pkgs.docker}/bin/docker exec -u ${hermesUser} ${containerName} ${containerHermes} "$@"
+    }
 
     ready=
     for _ in $(seq 1 60); do
-      if ${pkgs.docker}/bin/docker exec ${containerName} test -x ${containerHermes} 2>/dev/null; then
+      if ${pkgs.docker}/bin/docker exec -u ${hermesUser} ${containerName} \
+        test -x ${containerHermes} 2>/dev/null; then
         ready=1
         break
       fi
@@ -50,7 +53,7 @@ let
       exit 1
     fi
 
-    prompt="$(${pkgs.docker}/bin/docker exec ${containerName} cat ${promptContainerPath})"
+    prompt="$(${pkgs.docker}/bin/docker exec -u ${hermesUser} ${containerName} cat ${promptContainerPath})"
 
     hermes cron remove ${lib.escapeShellArg jobName} >/dev/null 2>&1 || true
     hermes cron create ${lib.escapeShellArg interval} "$prompt" \
