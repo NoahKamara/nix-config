@@ -25,13 +25,6 @@ in
 
   networking.hostName = "hammerhead";
 
-  # Resolve tunnel-gated vhosts to chimaera's WireGuard IP so requests
-  # arrive from 10.44.0.3 and pass the remote_ip matcher in Caddy.
-  environment.etc.hosts.text = lib.mkAfter ''
-    10.44.0.1   agent.noahkamara.com
-    fd42:44:44::1 agent.noahkamara.com
-  '';
-
   # Road-warrior WireGuard client to the VPS (chimaera).
   # nix-darwin will create a launchd daemon (wg-quick-wg0) and use wireguard-go.
   networking.wg-quick.interfaces.${wgInterface} = {
@@ -40,6 +33,8 @@ in
       "10.44.0.3/32"
       "fd42:44:44::3/128"
     ];
+    # Split DNS on chimaera (noah.services.wg-dns) for *.noahkamara.com services.
+    dns = [ "10.44.0.1" ];
     privateKeyFile = config.sops.secrets.wg0-private-key.path;
     peers = [
       {

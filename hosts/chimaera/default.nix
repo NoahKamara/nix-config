@@ -9,6 +9,7 @@
     ../../platform/nixos
     ../../modules/nixos/sops.nix
     ../../modules/nixos/forgejo.nix
+    ../../modules/nixos/wg-dns.nix
     ../../modules/nixos/hermes
     ./sops.nix
     ../../profiles/common.nix
@@ -28,6 +29,18 @@
     enable = true;
     hostName = "git.noahkamara.com";
     bootstrapAdmin.enable = true;
+  };
+  # Split DNS for WireGuard clients: these names → 10.44.0.1 (Caddy on chimaera).
+  noah.services.wg-dns = {
+    enable = true;
+    hosts = [
+      "agent.noahkamara.com" # Hermes (WG-gated)
+      "chimaera.noahkamara.com" # SSH / deploy via tunnel
+      "git.noahkamara.com" # Forgejo
+      "jellyfin.noahkamara.com" # media stack (home-network peer)
+      "jellyseer.noahkamara.com"
+      "home.noahkamara.com" # Home Assistant (192.168.178.71 via home-network peer)
+    ];
   };
   noah.services.hermes-agent = {
     enable = true;
