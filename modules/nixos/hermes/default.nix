@@ -45,6 +45,7 @@ in
     ./email.nix
     ./todoist.nix
     ./plugins.nix
+    ./personality.nix
   ];
 
   options.noah.services.hermes-agent = {

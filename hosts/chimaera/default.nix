@@ -32,6 +32,7 @@
   noah.services.hermes-agent = {
     enable = true;
     dashboard.insecure = true;
+    soul = ../../modules/nixos/hermes/SOUL.md;
     calendar = {
       enable = true;
       collections = [
@@ -42,7 +43,9 @@
       ];
     };
     todoist.enable = true;
+    todoist.delegation.enable = true;
     agentmail.enable = true;
+    agentmail.poll.enable = true;
     builtinSkills = {
       maps = true;
       obsidian = true;
