@@ -30,6 +30,20 @@ in
       '';
     };
 
+    disabled = mkOption {
+      type = types.listOf types.str;
+      default = [
+        "nous"
+        "nous-provider"
+      ];
+      example = [ "nous" ];
+      description = ''
+        Hermes plugins to explicitly disable (config.yaml `plugins.disabled`).
+        Matches plugin key or manifest name. Bundled backend plugins like
+        dashboard_auth/nous auto-load unless listed here.
+      '';
+    };
+
     memoryProvider = mkOption {
       type = types.nullOr types.str;
       default = null;
@@ -59,6 +73,9 @@ in
 
   config = mkIf cfg.enable {
     services.hermes-agent.settings = mkMerge [
+      (lib.optionalAttrs (pCfg.disabled != [ ]) {
+        plugins.disabled = pCfg.disabled;
+      })
       (lib.optionalAttrs (pCfg.enabled != [ ]) {
         plugins.enabled = pCfg.enabled;
       })
