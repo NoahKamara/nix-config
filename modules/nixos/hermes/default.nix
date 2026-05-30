@@ -40,6 +40,7 @@ in
   imports = [
     inputs.hermes-agent.nixosModules.default
     ./skills/default.nix
+    ./apiServer.nix
     ./dashboard.nix
     ./calendar.nix
     ./email.nix
@@ -60,6 +61,7 @@ in
         For Telegram, include TELEGRAM_BOT_TOKEN and TELEGRAM_ALLOWED_USERS
         (dotenv-style KEY=value lines in the secret value).
         For AgentMail, include AGENTMAIL_API_KEY (from console.agentmail.to).
+        For the Atomic mobile bridge, include API_SERVER_KEY (64-char hex bearer token).
         Set null to disable sops-backed env files.
       '';
     };

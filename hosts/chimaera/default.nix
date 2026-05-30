@@ -102,20 +102,20 @@
           "192.168.178.0/24"
         ];
       }
-      # {
-      #   # stardust peer
-      #   publicKey = "";
-      #   allowedIPs = [
-      #     "10.44.0.3/32"
-      #     "fd42:44:44::3/128"
-      #   ];
-      # }
       {
         # hammerhead
         publicKey = "X6JrUfnkc8D0QiqIOsm+1j9rbLifX1+H0Msu3Y7x4WM=";
         allowedIPs = [
           "10.44.0.3/32"
           "fd42:44:44::3/128"
+        ];
+      }
+      {
+        # phone (Atomic mobile) — wg pubkey < phone.private, then uncomment
+        publicKey = "JsQNqcR1hIHv58ASb5TA9PKu9zwvgPYR3i5noI/4rQk=";
+        allowedIPs = [
+          "10.44.0.4/32"
+          "fd42:44:44::4/128"
         ];
       }
     ];
@@ -156,11 +156,19 @@
       "home.noahkamara.com".extraConfig = ''
         reverse_proxy 192.168.178.71:8123
       '';
-      # Hermes
+      # Hermes — WireGuard-gated dashboard + OpenAI-compatible API (Atomic mobile)
       "agent.noahkamara.com".extraConfig = ''
         @wireguard remote_ip 10.44.0.0/24 fd42:44:44::/64 192.168.178.0/24
         handle @wireguard {
-          reverse_proxy 127.0.0.1:${toString config.noah.services.hermes-agent.dashboard.port}
+          handle /v1/* {
+            reverse_proxy 127.0.0.1:${toString config.noah.services.hermes-agent.apiServer.port}
+          }
+          handle /api/* {
+            reverse_proxy 127.0.0.1:${toString config.noah.services.hermes-agent.apiServer.port}
+          }
+          handle {
+            reverse_proxy 127.0.0.1:${toString config.noah.services.hermes-agent.dashboard.port}
+          }
         }
         respond 404
       '';
