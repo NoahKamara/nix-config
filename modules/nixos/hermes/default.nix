@@ -111,12 +111,12 @@ in
         {
           model = {
             provider = "openrouter";
-            default = "deepseek/deepseek-v4-flash";
+            default = "deepseek/deepseek-v4-pro";
             base_url = "https://openrouter.ai/api/v1";
           };
           fallback_model = {
             provider = "openrouter";
-            default = "deepseek/deepseek-v4-pro";
+            default = "deepseek/deepseek-v4-flash";
             base_url = "https://openrouter.ai/api/v1";
           };
         }
