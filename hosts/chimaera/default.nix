@@ -9,7 +9,7 @@
     ../../platform/nixos
     ../../modules/nixos/sops.nix
     ../../modules/nixos/forgejo.nix
-    ../../modules/nixos/hermes-agent.nix
+    ../../modules/nixos/hermes
     ./sops.nix
     ../../profiles/common.nix
     ../../profiles/dev.nix
