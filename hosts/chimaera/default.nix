@@ -40,6 +40,14 @@
       "7A1B3D74-0CC1-4734-8793-1B982BBF0407" # Mela
     ];
     todoist.enable = true;
+    agentmail.enable = true;
+    plugins = {
+      enabled = [
+        "security-guidance"
+        "disk-cleanup"
+      ];
+      memoryProvider = "holographic";
+    };
   };
   networking.firewall.allowedUDPPorts = [
     51820

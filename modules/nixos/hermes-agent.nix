@@ -20,6 +20,35 @@ let
   hermesStateDir = config.services.hermes-agent.stateDir;
   hermesUser = config.services.hermes-agent.user;
   hermesGroup = config.services.hermes-agent.group;
+  hermesAgentInput = inputs.hermes-agent;
+  hermesPackage = inputs.hermes-agent.packages.${pkgs.stdenv.hostPlatform.system}.messaging;
+  # Upstream 0.15.x wheels omit hermes_cli/* subpackages (dashboard_auth, proxy).
+  # Install them at activation from the flake source instead of rebuilding the package
+  # locally (which breaks deploy checks when cross-compiling from aarch64-darwin).
+  # https://github.com/NousResearch/hermes-agent/issues/34701
+  hermesCliOverlayRoot = "${hermesStateDir}/lib/hermes-cli-overlay";
+  hermesVenvSite = "${hermesPackage.passthru.hermesVenv}/${pkgs.python312.sitePackages}";
+  hermesDashboardLauncher = pkgs.writeText "hermes-dashboard-launcher.py" ''
+    import runpy
+    import sys
+
+    overlay = "${hermesCliOverlayRoot}/hermes_cli"
+    sys.path.insert(0, "${hermesVenvSite}")
+    import hermes_cli
+
+    hermes_cli.__path__.append(overlay)
+    sys.argv = ["hermes"] + sys.argv[1:]
+    raise SystemExit(runpy.run_module("hermes_cli.main", run_name="__main__"))
+  '';
+  hermesDashboardWrapper = pkgs.writeShellScript "hermes-dashboard" ''
+    export HERMES_BUNDLED_SKILLS="${hermesPackage}/share/hermes-agent/skills"
+    export HERMES_BUNDLED_PLUGINS="${hermesPackage}/share/hermes-agent/plugins"
+    export HERMES_WEB_DIST="${hermesPackage}/share/hermes-agent/web_dist"
+    export HERMES_TUI_DIR="${hermesPackage}/ui-tui"
+    export HERMES_PYTHON="${hermesPackage.passthru.hermesVenv}/bin/python3"
+    export HERMES_NODE="${pkgs.nodejs_22}/bin/node"
+    exec ${pkgs.python312}/bin/python3 ${hermesDashboardLauncher} "$@"
+  '';
   containerDataDir = "/data";
   icloudCalendarSkillMd = pkgs.writeText "icloud-calendar-SKILL.md" (
     builtins.readFile ./hermes-skills/icloud-calendar/SKILL.md
@@ -27,6 +56,13 @@ let
   icloudCalendarSkill = pkgs.runCommand "hermes-icloud-calendar-skill" { } ''
     mkdir -p $out/icloud-calendar
     cp ${icloudCalendarSkillMd} $out/icloud-calendar/SKILL.md
+  '';
+  agentmailSkillMd = pkgs.writeText "agentmail-SKILL.md" (
+    builtins.readFile ./hermes-skills/agentmail/SKILL.md
+  );
+  agentmailSkill = pkgs.runCommand "hermes-agentmail-skill" { } ''
+    mkdir -p $out/agentmail
+    cp ${agentmailSkillMd} $out/agentmail/SKILL.md
   '';
   vdirsyncerCollections =
     if cfg.calendar.collections != [ ] then
@@ -99,6 +135,7 @@ in
         Decrypted path is passed to services.hermes-agent.environmentFiles.
         For Telegram, include TELEGRAM_BOT_TOKEN and TELEGRAM_ALLOWED_USERS
         (dotenv-style KEY=value lines in the secret value).
+        For AgentMail, include AGENTMAIL_API_KEY (from console.agentmail.to).
         Set null to disable sops-backed env files.
       '';
     };
@@ -203,6 +240,56 @@ in
         Requires TODOIST_API_KEY in the sops-backed hermes-env secret.
       '';
     };
+
+    agentmail = {
+      enable = mkEnableOption ''
+        AgentMail agent-owned inboxes via the agentmail-mcp MCP server.
+        Requires AGENTMAIL_API_KEY in the sops-backed hermes-env secret.
+      '';
+    };
+
+    plugins = {
+      enabled = mkOption {
+        type = types.listOf types.str;
+        default = [ ];
+        example = [
+          "security-guidance"
+          "disk-cleanup"
+        ];
+        description = ''
+          Standalone Hermes plugins to opt into (config.yaml `plugins.enabled`
+          allow-list). Use the plugin key, e.g. "disk-cleanup". Backend, web,
+          and memory providers are selected via webBackend/memoryProvider, not
+          this list.
+        '';
+      };
+
+      memoryProvider = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        example = "holographic";
+        description = ''
+          Exclusive long-term memory provider (config.yaml `memory.provider`).
+          "holographic" is a local SQLite/FTS5 fact store needing no external
+          account; its only non-stdlib dependency (numpy) already ships in the
+          sealed venv, so no package override is required.
+        '';
+      };
+
+      webBackend = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        example = "brave_free";
+        description = ''
+          Web search backend (config.yaml `web.backend`). HTTP-based providers
+          (brave_free, searxng, xai) use only packages already in the sealed
+          venv. "ddgs" additionally requires pkgs.python312Packages.ddgs via
+          services.hermes-agent.extraPythonPackages, which forces a package
+          rebuild that executes the target-arch interpreter at build time and
+          can break cross-compiled deploy checks from aarch64-darwin.
+        '';
+      };
+    };
   };
 
   config = lib.mkMerge [
@@ -220,12 +307,16 @@ in
       services.hermes-agent = {
         enable = true;
         # Default package omits messaging SDKs; lazy-install cannot write to /nix/store.
-        package = inputs.hermes-agent.packages.${pkgs.stdenv.hostPlatform.system}.messaging;
+        package = hermesPackage;
         addToSystemPackages = true;
-        extraPackages = lib.optionals cfg.calendar.enable [
-          pkgs.vdirsyncer
-          pkgs.khal
-        ];
+        extraPackages =
+          lib.optionals cfg.calendar.enable [
+            pkgs.vdirsyncer
+            pkgs.khal
+          ]
+          ++ lib.optionals cfg.agentmail.enable [
+            pkgs.nodejs_22
+          ];
         environment = lib.optionalAttrs (cfg.dashboard.publicUrl != null) {
           HERMES_DASHBOARD_PUBLIC_URL = cfg.dashboard.publicUrl;
         };
@@ -251,9 +342,13 @@ in
               base_url = "https://openrouter.ai/api/v1";
             };
           }
-          (lib.optionalAttrs cfg.calendar.enable {
-            skills.always_load = [ "icloud-calendar" ];
-            skills.external_dirs = [ icloudCalendarSkill ];
+          (lib.optionalAttrs (cfg.calendar.enable || cfg.agentmail.enable) {
+            skills.always_load =
+              (lib.optional cfg.calendar.enable "icloud-calendar")
+              ++ (lib.optional cfg.agentmail.enable "agentmail");
+            skills.external_dirs =
+              (lib.optional cfg.calendar.enable icloudCalendarSkill)
+              ++ (lib.optional cfg.agentmail.enable agentmailSkill);
           })
           (lib.optionalAttrs cfg.todoist.enable {
             mcp_servers.todoist = {
@@ -263,9 +358,39 @@ in
               };
             };
           })
+          (lib.optionalAttrs cfg.agentmail.enable {
+            mcp_servers.agentmail = {
+              command = "npx";
+              args = [
+                "-y"
+                "agentmail-mcp"
+              ];
+              env = {
+                AGENTMAIL_API_KEY = "\${AGENTMAIL_API_KEY}";
+              };
+            };
+          })
+          (lib.optionalAttrs (cfg.plugins.enabled != [ ]) {
+            plugins.enabled = cfg.plugins.enabled;
+          })
+          (lib.optionalAttrs (cfg.plugins.memoryProvider != null) {
+            memory.provider = cfg.plugins.memoryProvider;
+          })
+          (lib.optionalAttrs (cfg.plugins.webBackend != null) {
+            web.backend = cfg.plugins.webBackend;
+          })
           cfg.settings
         ];
       };
+
+      system.activationScripts.hermes-cli-subpackages = lib.stringAfter [ "hermes-agent-setup" ] ''
+        rm -rf ${hermesCliOverlayRoot}
+        OVERLAY="${hermesCliOverlayRoot}/hermes_cli"
+        mkdir -p "$OVERLAY/dashboard_auth" "$OVERLAY/proxy"
+        cp -r ${hermesAgentInput}/hermes_cli/dashboard_auth/. "$OVERLAY/dashboard_auth/"
+        cp -r ${hermesAgentInput}/hermes_cli/proxy/. "$OVERLAY/proxy/"
+        chown -R ${hermesUser}:${hermesGroup} ${hermesCliOverlayRoot}
+      '';
 
       system.activationScripts.hermes-agent-calendar = lib.mkIf cfg.calendar.enable (
         lib.stringAfter [ "hermes-agent-setup" ] ''
@@ -295,6 +420,7 @@ in
       systemd.services.hermes-agent.restartTriggers = [
         config.services.hermes-agent.package
         (pkgs.writeText "hermes-agent-restart-trigger.json" (builtins.toJSON restartTriggerConfig))
+        hermesAgentInput
       ]
       ++ lib.optional (cfg.sopsSecretName != null) config.sops.secrets.${cfg.sopsSecretName}.sopsFile
       ++ lib.optional (
@@ -330,6 +456,10 @@ in
           HOME = config.services.hermes-agent.stateDir;
           HERMES_HOME = "${config.services.hermes-agent.stateDir}/.hermes";
           HERMES_MANAGED = "true";
+          # Dashboard runs on the host (separate systemd unit). Without this,
+          # main() execs into the managed container where the wheel still lacks
+          # hermes_cli/dashboard_auth.
+          HERMES_DEV = "1";
           MESSAGING_CWD = config.services.hermes-agent.workingDirectory;
         };
 
@@ -340,7 +470,7 @@ in
           WorkingDirectory = config.services.hermes-agent.workingDirectory;
           ExecStart = lib.concatStringsSep " " (
             [
-              "${lib.getExe config.services.hermes-agent.package}"
+              "${hermesDashboardWrapper}"
               "dashboard"
               "--host"
               cfg.dashboard.host
@@ -357,6 +487,7 @@ in
         };
 
         path = [
+          hermesDashboardWrapper
           config.services.hermes-agent.package
           pkgs.docker
           pkgs.bash
