@@ -2,3 +2,6 @@
 /result
 /.pre-commit-config.yaml
 .sops-age-key.txt
+phone-wg.png
+phone.private
+phone.public

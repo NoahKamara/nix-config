@@ -173,6 +173,16 @@
       "agent.noahkamara.com".extraConfig = ''
         @wireguard remote_ip 10.44.0.0/24 fd42:44:44::/64 192.168.178.0/24
         handle @wireguard {
+          # Atomic app base URL must be https://agent.noahkamara.com (no /v1 suffix).
+          # If /v1 is included, the client requests /v1/v1/models and fails.
+          @double_v1 path /v1/v1/*
+          handle @double_v1 {
+            uri replace /v1/v1 /v1
+            reverse_proxy 127.0.0.1:${toString config.noah.services.hermes-agent.apiServer.port}
+          }
+          handle /health* {
+            reverse_proxy 127.0.0.1:${toString config.noah.services.hermes-agent.apiServer.port}
+          }
           handle /v1/* {
             reverse_proxy 127.0.0.1:${toString config.noah.services.hermes-agent.apiServer.port}
           }
