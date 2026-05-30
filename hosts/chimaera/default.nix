@@ -32,15 +32,23 @@
   noah.services.hermes-agent = {
     enable = true;
     dashboard.insecure = true;
-    calendar.enable = true;
-    calendar.collections = [
-      "home" # Privat
-      "6BF07365-CE70-4C52-A646-EABDE233726D" # Events & Friends
-      "16bc2f30-e9b8-4f7e-b84e-83957740ac0c" # Familie
-      "7A1B3D74-0CC1-4734-8793-1B982BBF0407" # Mela
-    ];
+    calendar = {
+      enable = true;
+      collections = [
+        "home" # Privat
+        "6BF07365-CE70-4C52-A646-EABDE233726D" # Events & Friends
+        "16bc2f30-e9b8-4f7e-b84e-83957740ac0c" # Familie
+        "7A1B3D74-0CC1-4734-8793-1B982BBF0407" # Mela
+      ];
+    };
     todoist.enable = true;
     agentmail.enable = true;
+    builtinSkills = {
+      maps = true;
+      obsidian = true;
+      plan = true;
+      segment-anything-model = true;
+    };
     plugins = {
       enabled = [
         "security-guidance"

@@ -21,15 +21,6 @@ let
   hermesAgentInput = inputs.hermes-agent;
   hermesPackage = inputs.hermes-agent.packages.${pkgs.stdenv.hostPlatform.system}.messaging;
 
-  # Wrap each registered skill's source dir as <name>/SKILL.md so it can be
-  # passed to the agent's skills.external_dirs (one dir per skill).
-  mkSkillDir =
-    name: src:
-    pkgs.runCommand "hermes-skill-${name}" { } ''
-      mkdir -p $out/${name}
-      cp -r ${src}/. $out/${name}/
-    '';
-
   restartTriggerConfig = {
     inherit (config.services.hermes-agent)
       container
@@ -48,6 +39,7 @@ in
 {
   imports = [
     inputs.hermes-agent.nixosModules.default
+    ./skills/default.nix
     ./dashboard.nix
     ./calendar.nix
     ./email.nix
@@ -93,30 +85,6 @@ in
       };
     };
 
-    internalSkills = mkOption {
-      type = types.attrsOf (
-        types.submodule {
-          options = {
-            source = mkOption {
-              type = types.path;
-              description = "Directory containing the skill's SKILL.md (and any assets).";
-            };
-            alwaysLoad = mkOption {
-              type = types.bool;
-              default = false;
-              description = "Add this skill to config.yaml skills.always_load.";
-            };
-          };
-        }
-      );
-      default = { };
-      internal = true;
-      description = ''
-        Skill registry populated by domain modules (calendar, email, …).
-        Rendered once into skills.always_load / skills.external_dirs to avoid
-        the recursiveUpdate list-clobber that direct settings writes would hit.
-      '';
-    };
   };
 
   config = mkIf cfg.enable {
@@ -149,10 +117,6 @@ in
             base_url = "https://openrouter.ai/api/v1";
           };
         }
-        (lib.optionalAttrs (cfg.internalSkills != { }) {
-          skills.always_load = lib.attrNames (lib.filterAttrs (_: s: s.alwaysLoad) cfg.internalSkills);
-          skills.external_dirs = lib.mapAttrsToList (name: s: mkSkillDir name s.source) cfg.internalSkills;
-        })
         cfg.settings
       ];
     };

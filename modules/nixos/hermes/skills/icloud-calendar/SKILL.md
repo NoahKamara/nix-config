@@ -52,15 +52,6 @@ Use ISO dates and 24h times. Sync after creating.
 /data/bin/vdirsyncer sync
 ```
 
-## First-time setup
-
-If `vdirsyncer sync` fails with an undiscovered collections error, run once (answer **y** only for event calendars, **n** for Reminder lists like Einkauf/To Do):
-
-```bash
-yes | /data/bin/vdirsyncer discover
-/data/bin/vdirsyncer sync
-```
-
 ## Rules
 
 1. **Confirm before creating or deleting events** — show title, start, end, and calendar first.
